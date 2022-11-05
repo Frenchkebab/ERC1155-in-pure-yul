@@ -3,7 +3,7 @@ object "ERC1155" {
         /*
          * slot0 : owner
          */
-        
+
         // Deploy the contract
         datacopy(0, dataoffset("runtime"), datasize("runtime"))
         return(0, datasize("runtime"))
@@ -34,9 +34,9 @@ object "ERC1155" {
                 r := add(a, b)
                 if or(lt(r, a), lt(r, b)) { revert(0, 0) }
             }
-            function calledByOwner() -> cbo {
-                cbo := eq(owner(), caller())
-            }
+            // function calledByOwner() -> cbo {
+            //     cbo := eq(owner(), caller())
+            // }
             function revertIfZeroAddress(addr) {
                 require(addr)
             }
