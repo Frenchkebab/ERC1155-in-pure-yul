@@ -2,7 +2,22 @@ const { ethers } = require('hardhat');
 const fs = require('fs');
 const path = require('path');
 
-const getArtifact = () => {
+const getAbi = () => {
+  try {
+    const dir = path.resolve(
+      __dirname,
+      '../artifacts/contracts/IERC1155.sol/IERC1155.json'
+    );
+    const file = fs.readFileSync(dir, 'utf8');
+    const json = JSON.parse(file);
+    const abi = json.abi;
+    return abi;
+  } catch (e) {
+    console.log(`e: `, e);
+  }
+};
+
+const getBytecode = () => {
   try {
     const dir = path.resolve(
       __dirname,
@@ -10,26 +25,35 @@ const getArtifact = () => {
     );
     const file = fs.readFileSync(dir, 'utf8');
     const json = JSON.parse(file);
-    const abi = json.abi;
     const bytecode = json.bytecode;
-    return { abi, bytecode };
+    return bytecode;
   } catch (e) {
     console.log(`e: `, e);
   }
 };
 
 async function main() {
-  // const signer = await ethers.getSigner();
-
-  const artifact = getArtifact();
-  const ERC1155 = await ethers.getContractFactory(
-    artifact.abi,
-    artifact.bytecode
+  const signer = await ethers.getSigner();
+  const ERC1155Yul = await ethers.getContractFactory(
+    await getAbi(),
+    // bytecode
+    await getBytecode()
   );
-  const erc1155 = await ERC1155.deploy();
-  await erc1155.deployed();
+  const erc1155Yul = await ERC1155Yul.deploy();
+  await erc1155Yul.deployed();
 
-  console.log('ERC1155 deployed to:', erc1155.address);
+  const ERC1155YulCaller = await ethers.getContractFactory('ERC1155YulCaller');
+  const erc1155YulCaller = await ERC1155YulCaller.deploy();
+  await erc1155YulCaller.deployed();
+
+  console.log('ERC1155Yul deployed to:', erc1155Yul.address);
+  console.log('ERC1155YulCaller deployed to: ', erc1155YulCaller.address);
+  const uri = await erc1155YulCaller.uri(
+    erc1155Yul.address,
+    ethers.BigNumber.from('1')
+  );
+  // const uri = await erc1155Yul.uri(ethers.BigNumber.from('1'));
+  console.log(await uri);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

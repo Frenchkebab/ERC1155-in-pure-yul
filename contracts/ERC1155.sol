@@ -4,7 +4,7 @@ object "ERC1155" {
          * slot0: owner
          * slot1: uri
          * slot2: balances
-         * slot3: operatorApprovals 
+         * slot3: operatorApprovals
          */
 
         // Deploy the contract
@@ -21,7 +21,7 @@ object "ERC1155" {
             switch selector()
             case 0x00fdd58e /* "balanceOf(address,uint256)" */ {
 
-            }            
+            }
             case 0x4e1273f4 /* "balanceOfBatch(address[],uint256[])" */ {
 
             }

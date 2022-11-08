@@ -117,5 +117,13 @@ interface IERC1155 is IERC165 {
         bytes calldata data
     ) external;
 
-    function burnBatch(address from,uint256[] calldata ids,uint256[] calldata amounts) external;
+    function uri(uint256 id) external pure returns (string memory);
+
+    function mint(address to, uint256 id, uint256 amount, bytes calldata data) external;
+
+    function mintBatch(address to, uint256[] calldata ids, uint256[] calldata amounts, bytes calldata data) external;
+
+    function burn(address from, uint256 id, uint256 amount) external;
+
+    function burnBatch(address from, uint256[] calldata ids, uint256[] calldata amounts) external;
 }

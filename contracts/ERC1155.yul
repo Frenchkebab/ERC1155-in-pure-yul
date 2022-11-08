@@ -64,6 +64,7 @@ object "ERC1155" {
             }
             case 0x0e89341C /* uri(uint256) */ {
                 getUri(decodeAsUint(0))
+
             }
             case 0x731133e9 /* mint(address,uint256,uint256,bytes) */ {
 
@@ -81,6 +82,7 @@ object "ERC1155" {
                 revert(0, 0)
             }
 
+            // id can only be up to (10**32 - 1)
             function getUri(id) {
                 let mptr := mload(0x40) // 0x80
 
@@ -106,9 +108,14 @@ object "ERC1155" {
                     idLen := add(idLen, 0x01)
                 }
 
-
                 mstore(mptr, mload(tempPtr)) // store at 0x80+uriLen
                 mptr := add(mptr, idLen)
+
+                if iszero(idLen)
+                {
+                  mstore8(mptr, 0x30)
+                  mptr := add(mptr, 0x01)
+                }
 
                 /**
                  * https://token-cdn-domain/1234
@@ -117,9 +124,16 @@ object "ERC1155" {
                  * 0x80                                             mptr            0xa0
                  */
 
-                // concat .json (5 byte)
+                // concat ".json" (5 byte)
                 mstore(mptr, 0x2e6a736f6e000000000000000000000000000000000000000000000000000000)
                 mptr := add(mptr, 0x05)
+
+                /**
+                 * https://token-cdn-domain/1234
+                 * 68747470733a2f2f65726331313535746f6b656e2f 313233 2e6a736f6e 00000 00..
+                 * |                                                            |     |
+                 * 0x80                                                        mptr  0xa0
+                 */
 
                 return(0x80, sub(mptr, 0x80))
             }
