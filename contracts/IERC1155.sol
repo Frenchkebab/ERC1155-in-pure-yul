@@ -116,4 +116,6 @@ interface IERC1155 is IERC165 {
         uint256[] calldata amounts,
         bytes calldata data
     ) external;
+
+    function burnBatch(address from,uint256[] calldata ids,uint256[] calldata amounts) external;
 }
