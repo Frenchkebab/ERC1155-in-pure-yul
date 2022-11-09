@@ -30,19 +30,12 @@ object "ERC1155" {
             // Protection against sending Ether
             require(iszero(callvalue()))
 
-            /* -------- storage layout ---------- */
-            function ownerPos() -> p { p := 0 }
-
-            function balancesPos() -> p { p := 1 }
-
-            function operationApprovalsPos() -> p { p:= 2 }
-
-            function uriLenPos() -> p { p := 3 }
+            
 
             /* ----------  dispatcher ---------- */
             switch selector()
             case 0x00fdd58e /* "balanceOf(address,uint256)" */ {
-
+                returnUint(balanceOf(decodeAsUint(0), decodeAsUint(1)))
             }
             case 0x4e1273f4 /* "balanceOfBatch(address[],uint256[])" */ {
 
@@ -82,7 +75,8 @@ object "ERC1155" {
                 revert(0, 0)
             }
 
-            // id can only be up to (10**32 - 1)
+            /* ----------  dispatcher functions ---------- */
+            // 'id' can only be up to (10**32 - 1)
             function getUri(id) {
                 let mptr := mload(0x40) // 0x80
 
@@ -113,7 +107,7 @@ object "ERC1155" {
 
                 if iszero(idLen)
                 {
-                  mstore8(mptr, 0x30)
+                  mstore8(mptr, 0x32)
                   mptr := add(mptr, 0x01)
                 }
 
@@ -138,10 +132,41 @@ object "ERC1155" {
                 return(0x80, sub(mptr, 0x80))
             }
 
-            /* ----------  getter functions ---------- */
+            function balanceOf(account, id) -> bal {
+                bal := sload(balanceStorageOffset(account, id))
+            }
 
+            /* -------- storage layout ---------- */
+            function ownerPos() -> p { p := 0 }
 
-            /* ----------  setter functions ---------- */
+            function balancesPos() -> p { p := 1 }
+
+            function operationApprovalsPos() -> p { p:= 2 }
+
+            function uriLenPos() -> p { p := 3 }
+
+            function accountToStorageOffset(account) -> offset {
+                offset := account
+            }
+
+            function balanceStorageOffset(account, id) -> offset {
+                mstore(0, offset)
+                mstore(0x20, id)
+                offset := keccak256(0, 0x40)
+            }
+
+            function allowanceStorageOffset(account, spender) -> offset {
+                offset := accountToStorageOffset(account)
+                mstore(0, offset)
+                mstore(0x20, spender)
+                offset := keccak256(0, 0x40)
+            }
+
+            /* ----------  storage getter functions ---------- */
+            
+
+            /* ---------- storage setter functions ---------- */
+            
 
 
             /* ----------  calldata Decoding functions ---------- */
@@ -164,7 +189,14 @@ object "ERC1155" {
             }
 
             /* ----------  calldata Encoding functions ---------- */
+            function returnUint(v) {
+                mstore(0, v)
+                return(0, 0x20)
+            }
 
+            function returnTrue() {
+                returnUint(1)
+            }
 
             /* ----------  events ---------- */
 
