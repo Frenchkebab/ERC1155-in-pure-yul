@@ -35,7 +35,7 @@ object "ERC1155" {
             /* ----------  dispatcher ---------- */
             switch selector()
             case 0x00fdd58e /* "balanceOf(address,uint256)" */ {
-                returnUint(balanceOf(decodeAsUint(0), decodeAsUint(1)))
+                returnUint(balanceOf(decodeAsAddress(0), decodeAsUint(1)))
             }
             case 0x4e1273f4 /* "balanceOfBatch(address[],uint256[])" */ {
 
@@ -79,8 +79,14 @@ object "ERC1155" {
             // 'id' can only be up to (10**32 - 1)
             function getUri(id) {
                 let mptr := mload(0x40) // 0x80
+                mstore(mptr, 0x20) // store offset
+                mptr := add(mptr, 0x40)
+                
+                let returnLen := 0
 
                 let uriLen := sload(3)
+                returnLen := add(returnLen, uriLen)
+
                 let uriVal := sload(uriLen)
                 mstore(mptr, uriVal) // store uri at 0x80
                 mptr := add(mptr, uriLen)
@@ -89,7 +95,7 @@ object "ERC1155" {
                  * https://token-cdn-domain/
                  * 68747470733a2f2f65726331313535746f6b656e2f0000000000000000000000 00..
                  * |                                         |                      |
-                 * 0x80                                      0x80+uriLen            0xa0
+                 * 0xc0                                      0x80+uriLen            0xd0
                  */
 
                 let tempPtr := 0x1f
@@ -104,30 +110,37 @@ object "ERC1155" {
 
                 mstore(mptr, mload(tempPtr)) // store at 0x80+uriLen
                 mptr := add(mptr, idLen)
+                returnLen := add(returnLen, idLen)
 
                 if iszero(idLen)
                 {
-                  mstore8(mptr, 0x32)
+                  mstore8(mptr, 0x30)
                   mptr := add(mptr, 0x01)
+                  returnLen := add(returnLen, 0x01)
                 }
+
 
                 /**
                  * https://token-cdn-domain/1234
                  * 68747470733a2f2f65726331313535746f6b656e2f 3132330000000000000000 00..
                  * |                                                |                |
-                 * 0x80                                             mptr            0xa0
+                 * 0xc0                                             mptr            0xd0
                  */
 
                 // concat ".json" (5 byte)
                 mstore(mptr, 0x2e6a736f6e000000000000000000000000000000000000000000000000000000)
                 mptr := add(mptr, 0x05)
 
+                returnLen := add(returnLen, 0x05)
+                mstore(0xa0, returnLen)
+
                 /**
                  * https://token-cdn-domain/1234
                  * 68747470733a2f2f65726331313535746f6b656e2f 313233 2e6a736f6e 00000 00..
                  * |                                                            |     |
-                 * 0x80                                                        mptr  0xa0
+                 * 0xa0                                                        mptr  0xc0
                  */
+
 
                 return(0x80, sub(mptr, 0x80))
             }
@@ -150,9 +163,10 @@ object "ERC1155" {
             }
 
             function balanceStorageOffset(account, id) -> offset {
-                mstore(0, offset)
+                mstore(0, account)
                 mstore(0x20, id)
-                offset := keccak256(0, 0x40)
+                let temp := keccak256(0, 0x40)
+                offset := temp
             }
 
             function allowanceStorageOffset(account, spender) -> offset {

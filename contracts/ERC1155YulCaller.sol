@@ -1,18 +1,20 @@
-// SPDX-License-Identifer: Unlicensed
+// SPDX-License-Identifier: Unlicensed
 pragma solidity 0.8.16;
 
 import "./IERC1155.sol";
 
 contract ERC1155YulCaller {
-    address erc1155Yul;
+    IERC1155 erc1155Yul;
 
-    constructor(address addr) {
+    function setContractAddr(IERC1155 addr) external {
         erc1155Yul = addr;
     }
 
-    function uri(uint256 id) public view returns (string memory ret) {
-        (bool success, bytes memory data) = erc1155Yul.staticcall(abi.encodeWithSignature("uri(uint256)", id));
-        require(success, "call failed");
-        return string(data);
+    function uri(uint256 id) external view returns (string memory) {
+        return IERC1155(erc1155Yul).uri(id);
+    }
+
+    function balanceOf(address account, uint256 id) external view returns (uint256) {
+        return IERC1155(erc1155Yul).balanceOf(account, id);
     }
 }

@@ -63,10 +63,16 @@ contract('ERC115', function (accounts) {
     const ERC1155YulCaller = await ethers.getContractFactory(
       'ERC1155YulCaller'
     );
-    const erc1155YulCaller = await ERC1155YulCaller.deploy(erc1155Yul.address);
+    const erc1155YulCaller = await ERC1155YulCaller.deploy();
     await erc1155YulCaller.deployed();
 
+    const setContract = await erc1155YulCaller.setContractAddr(
+      erc1155Yul.address
+    );
+    await setContract.wait();
+
     this.token = await erc1155YulCaller;
+    // this.token = erc1155Yul;
   });
 
   shouldBehaveLikeERC1155(otherAccounts);
