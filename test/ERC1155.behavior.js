@@ -8,7 +8,7 @@ const { ZERO_ADDRESS } = constants;
 
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
-const { BigNumber, utils } = require('ethers');
+const { BigNumber, utils } = ethers;
 
 const {
   shouldSupportInterfaces,
@@ -31,7 +31,7 @@ function shouldBehaveLikeERC1155() {
   const RECEIVER_BATCH_MAGIC_VALUE = '0xbc197c81';
 
   describe('IERC1155 functions', function () {
-    describe('uri(uint256 id)', async function () {
+    describe('1. uri', async function () {
       it('should return uri string with id input substituted', async function () {
         const ID0 = 0;
         const ID1 = 1;
@@ -48,13 +48,13 @@ function shouldBehaveLikeERC1155() {
       });
     });
 
-    describe('balanceOf(address account, uint256 id)', function () {
-      //   it('reverts when queried about the zero address', async function () {
-      //     await expectRevert(
-      //       this.token.balanceOf(ZERO_ADDRESS, firstTokenId),
-      //       'ERC1155: address zero is not a valid owner'
-      //     );
-      //   });
+    describe('2. balanceOf', function () {
+      // it('reverts when queried about the zero address', async function () {
+      //   await expectRevert(
+      //     this.token.balanceOf(ZERO_ADDRESS, firstTokenId),
+      //     'ERC1155: address zero is not a valid owner'
+      //   );
+      // });
       context("1) when accounts don't own tokens", function () {
         it('should return zero before mint', async function () {
           expect(
@@ -62,21 +62,22 @@ function shouldBehaveLikeERC1155() {
               this.firstTokenHolder.getAddress(),
               firstTokenId
             )
-          ).to.deep.equal(BigNumber.from('0'));
+          ).to.deep.equal(zeroAmount);
           expect(
             await this.token.balanceOf(
               this.secondTokenHolder.getAddress(),
               secondTokenId
             )
-          ).to.deep.equal(BigNumber.from('0'));
+          ).to.deep.equal(zeroAmount);
           expect(
             await this.token.balanceOf(
               this.firstTokenHolder.getAddress(),
               unknownTokenId
             )
-          ).to.deep.equal(BigNumber.from('0'));
+          ).to.deep.equal(zeroAmount);
         });
       });
+
       context('2) when accounts own some tokens', function () {
         beforeEach(async function () {
           await this.token
@@ -122,93 +123,110 @@ function shouldBehaveLikeERC1155() {
       });
     });
 
-    // describe('balanceOfBatch', function () {
-    //   it("reverts when input arrays don't match up", async function () {
-    //     await expectRevert(
-    //       this.token.balanceOfBatch(
-    //         [
-    //           firstTokenHolder,
-    //           secondTokenHolder,
-    //           firstTokenHolder,
-    //           secondTokenHolder,
-    //         ],
-    //         [firstTokenId, secondTokenId, unknownTokenId]
-    //       ),
-    //       'ERC1155: accounts and ids length mismatch'
-    //     );
-    //     await expectRevert(
-    //       this.token.balanceOfBatch(
-    //         [firstTokenHolder, secondTokenHolder],
-    //         [firstTokenId, secondTokenId, unknownTokenId]
-    //       ),
-    //       'ERC1155: accounts and ids length mismatch'
-    //     );
-    //   });
-    //   it('reverts when one of the addresses is the zero address', async function () {
-    //     await expectRevert(
-    //       this.token.balanceOfBatch(
-    //         [firstTokenHolder, secondTokenHolder, ZERO_ADDRESS],
-    //         [firstTokenId, secondTokenId, unknownTokenId]
-    //       ),
-    //       'ERC1155: address zero is not a valid owner'
-    //     );
-    //   });
-    //   context("when accounts don't own tokens", function () {
-    //     it('returns zeros for each account', async function () {
-    //       const result = await this.token.balanceOfBatch(
-    //         [firstTokenHolder, secondTokenHolder, firstTokenHolder],
-    //         [firstTokenId, secondTokenId, unknownTokenId]
-    //       );
-    //       expect(result).to.be.an('array');
-    //       expect(result[0]).to.be.a.bignumber.equal('0');
-    //       expect(result[1]).to.be.a.bignumber.equal('0');
-    //       expect(result[2]).to.be.a.bignumber.equal('0');
-    //     });
-    //   });
-    //   context('when accounts own some tokens', function () {
-    //     beforeEach(async function () {
-    //       await this.token.mint(
-    //         firstTokenHolder,
-    //         firstTokenId,
-    //         firstAmount,
-    //         '0x',
-    //         {
-    //           from: minter,
-    //         }
-    //       );
-    //       await this.token.mint(
-    //         secondTokenHolder,
-    //         secondTokenId,
-    //         secondAmount,
-    //         '0x',
-    //         {
-    //           from: minter,
-    //         }
-    //       );
-    //     });
-    //     it('returns amounts owned by each account in order passed', async function () {
-    //       const result = await this.token.balanceOfBatch(
-    //         [secondTokenHolder, firstTokenHolder, firstTokenHolder],
-    //         [secondTokenId, firstTokenId, unknownTokenId]
-    //       );
-    //       expect(result).to.be.an('array');
-    //       expect(result[0]).to.be.a.bignumber.equal(secondAmount);
-    //       expect(result[1]).to.be.a.bignumber.equal(firstAmount);
-    //       expect(result[2]).to.be.a.bignumber.equal('0');
-    //     });
-    //     it('returns multiple times the balance of the same address when asked', async function () {
-    //       const result = await this.token.balanceOfBatch(
-    //         [firstTokenHolder, secondTokenHolder, firstTokenHolder],
-    //         [firstTokenId, secondTokenId, firstTokenId]
-    //       );
-    //       expect(result).to.be.an('array');
-    //       expect(result[0]).to.be.a.bignumber.equal(result[2]);
-    //       expect(result[0]).to.be.a.bignumber.equal(firstAmount);
-    //       expect(result[1]).to.be.a.bignumber.equal(secondAmount);
-    //       expect(result[2]).to.be.a.bignumber.equal(firstAmount);
-    //     });
-    //   });
-    // });
+    describe('3. balanceOfBatch', function () {
+      // it("reverts when input arrays don't match up", async function () {
+      //   await expectRevert(
+      //     this.token.balanceOfBatch(
+      //       [
+      //         this.firstTokenHolder.getAddress(),
+      //         this.secondTokenHolder.getAddress(),
+      //         this.firstTokenHolder.getAddress(),
+      //         this.secondTokenHolder.getAddress(),
+      //       ],
+      //       [firstTokenId, secondTokenId, unknownTokenId]
+      //     ),
+      //     'ERC1155: accounts and ids length mismatch'
+      //   );
+      //   await expectRevert(
+      //     this.token.balanceOfBatch(
+      //       [
+      //         this.firstTokenHolder.getAddress(),
+      //         this.secondTokenHolder.getAddress(),
+      //       ],
+      //       [firstTokenId, secondTokenId, unknownTokenId]
+      //     ),
+      //     'ERC1155: accounts and ids length mismatch'
+      //   );
+      // });
+      // it('reverts when one of the addresses is the zero address', async function () {
+      //   await expectRevert(
+      //     this.token.balanceOfBatch(
+      //       [
+      //         this.firstTokenHolder.getAddress(),
+      //         this.secondTokenHolder.getAddress(),
+      //         ZERO_ADDRESS,
+      //       ],
+      //       [firstTokenId, secondTokenId, unknownTokenId]
+      //     ),
+      //     'ERC1155: address zero is not a valid owner'
+      //   );
+      // });
+      context("when accounts don't own tokens", function () {
+        it('should return zeros for each account', async function () {
+          const result = await this.token.balanceOfBatch(
+            [
+              this.firstTokenHolder.getAddress(),
+              this.secondTokenHolder.getAddress(),
+              this.firstTokenHolder.getAddress(),
+            ],
+            [firstTokenId, secondTokenId, unknownTokenId]
+          );
+          expect(result).to.be.an('array');
+          expect(result[0]).to.deep.equal(zeroAmount);
+          expect(result[1]).to.deep.equal(zeroAmount);
+          expect(result[2]).to.deep.equal(zeroAmount);
+        });
+      });
+      context('when accounts own some tokens', function () {
+        beforeEach(async function () {
+          await this.token
+            .connect(this.minter)
+            .mint(
+              this.firstTokenHolder.getAddress(),
+              firstTokenId,
+              firstAmount,
+              '0x'
+            );
+          await this.token
+            .connect(this.minter)
+            .mint(
+              this.secondTokenHolder.getAddress(),
+              secondTokenId,
+              secondAmount,
+              '0x'
+            );
+        });
+        it('should return amounts owned by each account in order passed', async function () {
+          const result = await this.token.balanceOfBatch(
+            [
+              this.secondTokenHolder.getAddress(),
+              this.firstTokenHolder.getAddress(),
+              this.firstTokenHolder.getAddress(),
+            ],
+            [secondTokenId, firstTokenId, unknownTokenId]
+          );
+          expect(result).to.be.an('array');
+          expect(result[0]).to.deep.equal(secondAmount);
+          expect(result[1]).to.deep.equal(firstAmount);
+          expect(result[2]).to.deep.equal(zeroAmount);
+        });
+        it('should return multiple times the balance of the same address when asked', async function () {
+          const result = await this.token.balanceOfBatch(
+            [
+              this.firstTokenHolder.getAddress(),
+              this.secondTokenHolder.getAddress(),
+              this.firstTokenHolder.getAddress(),
+            ],
+            [firstTokenId, secondTokenId, firstTokenId]
+          );
+          expect(result).to.be.an('array');
+          expect(result[0]).to.deep.equal(BigNumber.from(result[2]));
+          expect(result[0]).to.deep.equal(firstAmount);
+          expect(result[1]).to.deep.equal(secondAmount);
+          expect(result[2]).to.deep.equal(firstAmount);
+        });
+      });
+    });
     // describe('setApprovalForAll', function () {
     //   let receipt;
     //   beforeEach(async function () {

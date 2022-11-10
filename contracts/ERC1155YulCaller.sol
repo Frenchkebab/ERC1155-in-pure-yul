@@ -21,4 +21,14 @@ contract ERC1155YulCaller {
     function mint(address to, uint256 id, uint256 amount, bytes calldata data) external {
         erc1155Yul.mint(to, id, amount, data);
     }
+
+    function balanceOfBatch(
+        address[] calldata accounts,
+        uint256[] calldata ids
+    ) external view returns (uint256[] memory) {
+        // ) external view returns (bytes memory) {
+        return erc1155Yul.balanceOfBatch(accounts, ids);
+        // (, bytes memory data) = address(erc1155Yul).staticcall(abi.encodeWithSignature("balanceOfBatch(address[],uint256[]", accounts, ids));
+        // return data;
+    }
 }

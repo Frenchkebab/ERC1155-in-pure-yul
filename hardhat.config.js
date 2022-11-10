@@ -4,6 +4,7 @@ require('@nomiclabs/hardhat-waffle');
 require('hardhat-gas-reporter');
 require('solidity-coverage');
 require('@tovarishfin/hardhat-yul');
+require('@nomicfoundation/hardhat-chai-matchers');
 
 require('dotenv').config();
 

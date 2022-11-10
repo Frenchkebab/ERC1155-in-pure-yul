@@ -1,4 +1,4 @@
-object "ERC1155" {
+object "ERC1155Yul" {
     code {
         /*
          * slot0: owner
@@ -38,13 +38,13 @@ object "ERC1155" {
                 returnUint(balanceOf(decodeAsAddress(0), decodeAsUint(1)))
             }
             case 0x4e1273f4 /* "balanceOfBatch(address[],uint256[])" */ {
-
+                balanceOfBatch(decodeAsUint(0), decodeAsUint(1))
             }
             case 0xe985e9c5 /* "isApprovedForAll(address,address)" */ {
 
             }
             case 0x2eb2c2d6 /* "safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)" */ {
-
+                
             }
             case 0xf242432a /* "safeTransferFrom(address,address,uint256,uint256,bytes)" */ {
 
@@ -146,12 +146,53 @@ object "ERC1155" {
             }
 
             function balanceOf(account, id) -> bal {
+                revertZeroAddressOwner(account)
                 bal := sload(balanceStorageOffset(account, id))
+            }
+
+            function balanceOfBatch(accountsPos, idsPos) {
+                let accountsPtr := mload(0x40)
+                let idsPtr := mstoreArray(accountsPos, accountsPtr)
+                let returnArrPtr := mstoreArray(idsPos, idsPtr)
+
+                let accountsLen := decodeAsArrayLen(accountsPos)
+                let idLen := decodeAsArrayLen(idsPos)
+
+                if iszero(eq(accountsLen, idLen))
+                {   
+                    mstore(0x00, 0x20)
+                    mstore(0x20, 41)
+                    // "ERC1155: accounts and ids length mismatch"
+                    mstore(0x40, 0x455243313135353a206163636f756e747320616e6420696473206c656e677468)
+                    mstore(0x60, 0x206d69736d617463680000000000000000000000000000000000000000000000)
+                    revert(0x00, 0x80)
+                }
+
+                // return array
+                mstore(returnArrPtr, 0x20)
+                mstore(add(returnArrPtr, 0x20), accountsLen)
+
+                let elPtr := add(returnArrPtr, 0x40)
+
+                let i := 0
+                let id
+                let account
+                for {  } lt(i, accountsLen) { i:= add(i, 1)}
+                {    
+                    account := getArrElement(accountsPtr, i)
+                    id := getArrElement(idsPtr, i)
+
+                    revertInValidAddress(account)
+
+                    mstore(elPtr, balanceOf(account, id))
+                    elPtr := add(elPtr, 0x20)
+                }
+
+                returnArray(returnArrPtr, elPtr)
             }
 
             function mint(to, id, amount) {
                 _mint(to, id, amount)
-
             }
 
             /* -------- storage layout ---------- */
@@ -201,10 +242,9 @@ object "ERC1155" {
 
             function decodeAsAddress(offset) -> v {
                 v := decodeAsUint(offset)
-                if iszero(iszero(and(v, not(0xffffffffffffffffffffffffffffffffffffffff)))) {
-                    revert(0, 0)
-                }
+                revertInValidAddress(v)
             }
+
             function decodeAsUint(offset) -> v {
                 let pos := add(4, mul(offset, 0x20))
                 if lt(calldatasize(), add(pos, 0x20)) {
@@ -213,10 +253,28 @@ object "ERC1155" {
                 v := calldataload(pos)
             }
 
+            function decodeAsArrayLen(pos) -> len {
+                len := calldataload(add(4, pos)) // pos + selector
+            }
+
+            function mstoreArray(pos, mptr) -> newMptr  {
+                let len := decodeAsArrayLen(pos) 
+                if lt(calldatasize(), add(4, add(0x20, mul(len, 0x20)))) {
+                    revert(0, 0)
+                }
+                let dataLen := add(0x20, mul(len, 0x20)) // len + arraydata
+                calldatacopy(mptr, add(4, pos), dataLen)
+                newMptr := add(mptr, dataLen)
+            }
+
             /* ----------  calldata Encoding functions ---------- */
             function returnUint(v) {
                 mstore(0, v)
                 return(0, 0x20)
+            }
+
+            function returnArray(ptr, endPtr) {
+                return(ptr, sub(endPtr, ptr))
             }
 
             function returnTrue() {
@@ -285,6 +343,28 @@ object "ERC1155" {
                 {
                     num := mul(num, 0x10)
                     digits := add(digits, 1)
+                }
+            }
+
+            // fetches arr[i]
+            function getArrElement(ptr, i) -> el {
+                el := mload(add(add(ptr, 0x20), mul(i, 0x20)))
+            }
+
+            function revertZeroAddressOwner(account) {
+                if iszero(account) {
+                    mstore(0x00, 0x08c379a00000000000000000000000000000000000000000000000000000000)
+                    mstore(0x04, 0x20)
+                    mstore(0x24, 41)
+                    mstore(0x44, 0x455243313135353a2061646472657373207a65726f206973206e6f7420612076)
+                    mstore(0x64, 0x616c6964206f776e657200000000000000000000000000000000000000000000)
+                    revert(0x00, 0x84)
+                }
+            }
+
+            function revertInValidAddress(addr) {
+                if iszero(iszero(and(addr, not(0xffffffffffffffffffffffffffffffffffffffff)))) {
+                    revert(0, 0)
                 }
             }
         }
