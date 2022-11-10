@@ -46,7 +46,7 @@ const getBytecode = () => {
 };
 
 contract('ERC115', function (accounts) {
-  const [operator, tokenHolder, tokenBatchHolder, ...otherAccounts] = accounts;
+  // const [operator, tokenHolder, tokenBatchHolder, ...otherAccounts] = accounts;
 
   // const initialURI = 'https://token-cdn-domain/{id}.json';
 
@@ -72,10 +72,22 @@ contract('ERC115', function (accounts) {
     await setContract.wait();
 
     this.token = await erc1155YulCaller;
-    // this.token = erc1155Yul;
+    // this.token = erc1155Yul; //! not working
+
+    [
+      this.operator,
+      this.tokenHolder,
+      this.tokenBatchHolder,
+      this.minter,
+      this.firstTokenHolder,
+      this.secondTokenHolder,
+      this.multiTokenHolder,
+      this.recipient,
+      this.proxy,
+    ] = await ethers.getSigners();
   });
 
-  shouldBehaveLikeERC1155(otherAccounts);
+  shouldBehaveLikeERC1155();
 
   // describe('internal functions', function () {
   //   const tokenId = new BN(1990);

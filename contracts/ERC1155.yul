@@ -60,7 +60,7 @@ object "ERC1155" {
 
             }
             case 0x731133e9 /* mint(address,uint256,uint256,bytes) */ {
-
+                mint(decodeAsAddress(0), decodeAsUint(1), decodeAsUint(2))
             }
             case 0x1f7fDffa /* mintBatch(address,uint256[],uint256[],bytes) */{
 
@@ -149,6 +149,11 @@ object "ERC1155" {
                 bal := sload(balanceStorageOffset(account, id))
             }
 
+            function mint(to, id, amount) {
+                _mint(to, id, amount)
+
+            }
+
             /* -------- storage layout ---------- */
             function ownerPos() -> p { p := 0 }
 
@@ -163,10 +168,9 @@ object "ERC1155" {
             }
 
             function balanceStorageOffset(account, id) -> offset {
-                mstore(0, account)
-                mstore(0x20, id)
-                let temp := keccak256(0, 0x40)
-                offset := temp
+                mstore(0, id)
+                mstore(0x20, account)
+                offset := keccak256(0, 0x40)
             }
 
             function allowanceStorageOffset(account, spender) -> offset {
@@ -176,12 +180,19 @@ object "ERC1155" {
                 offset := keccak256(0, 0x40)
             }
 
-            /* ----------  storage getter functions ---------- */
-            
 
-            /* ---------- storage setter functions ---------- */
-            
+            /* ---------- storage access functions ---------- */
+            function _mint(to, id, amount) {
+                addBalance(to, id, amount)
+                let operator := caller()
+                emitTransferSingle(operator, 0, to, id, amount)
+            }
 
+            function addBalance(to, id, amount) {
+                let offset := balanceStorageOffset(to, id)
+                let prev := sload(offset)
+                sstore(offset, safeAdd(prev, amount))
+            }
 
             /* ----------  calldata Decoding functions ---------- */
             function selector() -> s {
@@ -213,9 +224,13 @@ object "ERC1155" {
             }
 
             /* ----------  events ---------- */
-
-
-            /* ---------- storage access functions ---------- */
+            function emitTransferSingle(operator, from, to, id, value) {
+                /* TransferSingle(address,address,address,uint256) */
+                let signatureHash := 0x9e6acd20e3f2497dbc8f7c785e2922c6550e2c7182ab2da2637b302b65b416fd
+                mstore(0x00, id)
+                mstore(0x20, value)
+                log3(0x00, 0x40, operator, from, to)
+            }
 
 
             /* ---------- utility functions ---------- */

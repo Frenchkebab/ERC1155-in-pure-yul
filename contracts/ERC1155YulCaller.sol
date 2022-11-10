@@ -17,4 +17,8 @@ contract ERC1155YulCaller {
     function balanceOf(address account, uint256 id) external view returns (uint256) {
         return IERC1155(erc1155Yul).balanceOf(account, id);
     }
+
+    function mint(address to, uint256 id, uint256 amount, bytes calldata data) external {
+        erc1155Yul.mint(to, id, amount, data);
+    }
 }
