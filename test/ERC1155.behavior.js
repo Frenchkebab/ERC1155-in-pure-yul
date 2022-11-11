@@ -126,44 +126,73 @@ function shouldBehaveLikeERC1155() {
     });
 
     describe('3. balanceOfBatch', function () {
-      // it("reverts when input arrays don't match up", async function () {
-      //   await expectRevert(
-      //     this.token.balanceOfBatch(
-      //       [
-      //         this.firstTokenHolder.address,
-      //         this.secondTokenHolder.address,
-      //         this.firstTokenHolder.address,
-      //         this.secondTokenHolder.address,
-      //       ],
-      //       [firstTokenId, secondTokenId, unknownTokenId]
-      //     ),
-      //     'ERC1155: accounts and ids length mismatch'
-      //   );
-      //   await expectRevert(
-      //     this.token.balanceOfBatch(
-      //       [
-      //         this.firstTokenHolder.address,
-      //         this.secondTokenHolder.address,
-      //       ],
-      //       [firstTokenId, secondTokenId, unknownTokenId]
-      //     ),
-      //     'ERC1155: accounts and ids length mismatch'
-      //   );
-      // });
-      // it('reverts when one of the addresses is the zero address', async function () {
-      //   await expectRevert(
-      //     this.token.balanceOfBatch(
-      //       [
-      //         this.firstTokenHolder.address,
-      //         this.secondTokenHolder.address,
-      //         ZERO_ADDRESS,
-      //       ],
-      //       [firstTokenId, secondTokenId, unknownTokenId]
-      //     ),
-      //     'ERC1155: address zero is not a valid owner'
-      //   );
-      // });
-      context("when accounts don't own tokens", function () {
+      it("should revert when input arrays don't match up", async function () {
+        // await expectRevert(
+        //   this.token.balanceOfBatch(
+        //     [
+        //       this.firstTokenHolder.address,
+        //       this.secondTokenHolder.address,
+        //       this.firstTokenHolder.address,
+        //       this.secondTokenHolder.address,
+        //     ],
+        //     [firstTokenId, secondTokenId, unknownTokenId]
+        //   ),
+        //   'ERC1155: accounts and ids length mismatch'
+        // );
+        await expect(
+          this.token.balanceOfBatch(
+            [
+              this.firstTokenHolder.address,
+              this.secondTokenHolder.address,
+              this.firstTokenHolder.address,
+              this.secondTokenHolder.address,
+            ],
+            [firstTokenId, secondTokenId, unknownTokenId]
+          )
+        ).to.be.reverted;
+
+        // await expectRevert(
+        //   this.token.balanceOfBatch(
+        //     [
+        //       this.firstTokenHolder.address,
+        //       this.secondTokenHolder.address,
+        //     ],
+        //     [firstTokenId, secondTokenId, unknownTokenId]
+        //   ),
+        //   'ERC1155: accounts and ids length mismatch'
+        // );
+        await expect(
+          this.token.balanceOfBatch(
+            [this.firstTokenHolder.address, this.secondTokenHolder.address],
+            [firstTokenId, secondTokenId, unknownTokenId]
+          )
+        ).to.be.reverted;
+      });
+
+      it('should when one of the addresses is the zero address', async function () {
+        // await expectRevert(
+        //   this.token.balanceOfBatch(
+        //     [
+        //       this.firstTokenHolder.address,
+        //       this.secondTokenHolder.address,
+        //       ZERO_ADDRESS,
+        //     ],
+        //     [firstTokenId, secondTokenId, unknownTokenId]
+        //   ),
+        //   'ERC1155: address zero is not a valid owner'
+        // );
+        await expect(
+          this.token.balanceOfBatch(
+            [
+              this.firstTokenHolder.address,
+              this.secondTokenHolder.address,
+              ZERO_ADDRESS,
+            ],
+            [firstTokenId, secondTokenId, unknownTokenId]
+          )
+        ).to.be.reverted;
+      });
+      context("1) when accounts don't own tokens", function () {
         it('should return zeros for each account', async function () {
           const result = await this.token.balanceOfBatch(
             [
@@ -179,7 +208,7 @@ function shouldBehaveLikeERC1155() {
           expect(result[2]).to.deep.equal(zeroAmount);
         });
       });
-      context('when accounts own some tokens', function () {
+      context('2) when accounts own some tokens', function () {
         beforeEach(async function () {
           await this.token
             .connect(this.minter)
@@ -229,7 +258,7 @@ function shouldBehaveLikeERC1155() {
         });
       });
     });
-    describe('setApprovalForAll', function () {
+    describe('4. setApprovalForAll', function () {
       let tx;
       let receipt;
       beforeEach(async function () {
@@ -238,7 +267,7 @@ function shouldBehaveLikeERC1155() {
           .setApprovalForAll(this.proxy.address, true);
       });
 
-      it('sets approval status should be able to be queried via isApprovedForAll', async function () {
+      it('approval status should be able to be queried via isApprovedForAll', async function () {
         await tx.wait();
         expect(
           await this.token.isApprovedForAll(
@@ -266,7 +295,7 @@ function shouldBehaveLikeERC1155() {
         ).to.be.equal(false);
       });
 
-      it('reverts if attempting to approve self as an operator', async function () {
+      it('should revert if attempting to approve self as an operator', async function () {
         // await expectRevert(
         //   this.token.setApprovalForAll(multiTokenHolder, true, {
         //     from: multiTokenHolder,
@@ -586,6 +615,7 @@ function shouldBehaveLikeERC1155() {
     //     }
     //   );
     // });
+
     // describe('safeBatchTransferFrom', function () {
     //   beforeEach(async function () {
     //     await this.token.mint(multiTokenHolder, firstTokenId, firstAmount, '0x', {
