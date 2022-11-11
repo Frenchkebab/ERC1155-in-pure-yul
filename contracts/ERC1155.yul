@@ -47,7 +47,7 @@ object "ERC1155Yul" {
                 
             }
             case 0xf242432a /* "safeTransferFrom(address,address,uint256,uint256,bytes)" */ {
-
+                safeTransferFrom(decodeAsAddress(0), decodeAsAddress(1), decodeAsUint(2), decodeAsUint(3))
             }
             case 0xa22cb465 /* "setApprovalForAll(address,bool)" */ {
                 setApprovalForAll(decodeAsAddress(0), decodeAsBool(1))
@@ -146,7 +146,7 @@ object "ERC1155Yul" {
 
             function balanceOf(account, id) -> bal {
                 revertZeroAddressOwner(account)
-                bal := sload(balanceStorageOffset(account, id))
+                bal := sload(balanceStorageOffset(id, account))
             }
 
             function balanceOfBatch(accountsPos, idsPos) {
@@ -203,6 +203,10 @@ object "ERC1155Yul" {
                 v := sload(offset)
             }
 
+            function safeTransferFrom(from, to, id, amount) {
+                _safeTransferFrom(from, to, id, amount)
+            }
+
             /* -------- storage layout ---------- */
             function ownerPos() -> p { p := 0 }
 
@@ -210,7 +214,7 @@ object "ERC1155Yul" {
 
             function uriLenPos() -> p { p := 3 }
 
-            function balanceStorageOffset(account, id) -> offset {
+            function balanceStorageOffset(id, account) -> offset {
                 mstore(0, id)
                 mstore(0x20, account)
                 offset := keccak256(0, 0x40)
@@ -231,7 +235,7 @@ object "ERC1155Yul" {
             }
 
             function addBalance(to, id, amount) {
-                let offset := balanceStorageOffset(to, id)
+                let offset := balanceStorageOffset(id, to)
                 let prev := sload(offset)
                 sstore(offset, safeAdd(prev, amount))
             }
@@ -241,6 +245,26 @@ object "ERC1155Yul" {
                 let offset := operatorApprovalStorageOffset(owner, operator)
                 sstore(offset, approved)
                 emitApprovalForAll(owner, operator, approved)
+            }
+
+            function _safeTransferFrom(from, to, id, amount) {
+                require(to)
+
+                let operator := caller()
+                let fromOffset := balanceStorageOffset(id, from)
+                let toOffset := balanceStorageOffset(id, to)
+
+                let fromBalance := sload(fromOffset)
+                let toBalance := sload(toOffset)
+                
+                // checks if 'from' account balance is greater than 'amount' to transfer
+                require(iszero(lt(fromBalance, amount)))
+
+                // update balance
+                sstore(fromOffset, sub(fromBalance, amount))
+                sstore(toOffset, safeAdd(toBalance, amount))
+
+                emitTransferSingle(operator, from, to, id, amount)
             }
 
             /* ----------  calldata Decoding functions ---------- */

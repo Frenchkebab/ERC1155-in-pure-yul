@@ -208,6 +208,7 @@ function shouldBehaveLikeERC1155() {
           expect(result[2]).to.deep.equal(zeroAmount);
         });
       });
+
       context('2) when accounts own some tokens', function () {
         beforeEach(async function () {
           await this.token
@@ -227,6 +228,7 @@ function shouldBehaveLikeERC1155() {
               '0x'
             );
         });
+
         it('should return amounts owned by each account in order passed', async function () {
           const result = await this.token.balanceOfBatch(
             [
@@ -241,6 +243,7 @@ function shouldBehaveLikeERC1155() {
           expect(result[1]).to.deep.equal(firstAmount);
           expect(result[2]).to.deep.equal(zeroAmount);
         });
+
         it('should return multiple times the balance of the same address when asked', async function () {
           const result = await this.token.balanceOfBatch(
             [
@@ -258,6 +261,7 @@ function shouldBehaveLikeERC1155() {
         });
       });
     });
+
     describe('4. setApprovalForAll', function () {
       let tx;
       let receipt;
@@ -309,669 +313,700 @@ function shouldBehaveLikeERC1155() {
         ).to.be.reverted;
       });
     });
-    // describe('safeTransferFrom', function () {
-    //   beforeEach(async function () {
-    //     await this.token.mint(
-    //       multiTokenHolder,
-    //       firstTokenId,
-    //       firstAmount,
-    //       '0x',
-    //       {
-    //         from: minter,
-    //       }
-    //     );
-    //     await this.token.mint(
-    //       multiTokenHolder,
-    //       secondTokenId,
-    //       secondAmount,
-    //       '0x',
-    //       {
-    //         from: minter,
-    //       }
-    //     );
-    //   });
-    //   it('reverts when transferring more than balance', async function () {
-    //     await expectRevert(
-    //       this.token.safeTransferFrom(
-    //         multiTokenHolder,
-    //         recipient,
-    //         firstTokenId,
-    //         firstAmount.addn(1),
-    //         '0x',
-    //         { from: multiTokenHolder }
-    //       ),
-    //       'ERC1155: insufficient balance for transfer'
-    //     );
-    //   });
-    //   it('reverts when transferring to zero address', async function () {
-    //     await expectRevert(
-    //       this.token.safeTransferFrom(
-    //         multiTokenHolder,
-    //         ZERO_ADDRESS,
-    //         firstTokenId,
-    //         firstAmount,
-    //         '0x',
-    //         { from: multiTokenHolder }
-    //       ),
-    //       'ERC1155: transfer to the zero address'
-    //     );
-    //   });
-    //   function transferWasSuccessful({ operator, from, id, value }) {
-    //     it('debits transferred balance from sender', async function () {
-    //       const newBalance = await this.token.balanceOf(from, id);
-    //       expect(newBalance).to.be.a.bignumber.equal('0');
-    //     });
-    //     it('credits transferred balance to receiver', async function () {
-    //       const newBalance = await this.token.balanceOf(this.toWhom, id);
-    //       expect(newBalance).to.be.a.bignumber.equal(value);
-    //     });
-    //     it('emits a TransferSingle log', function () {
-    //       expectEvent(this.transferLogs, 'TransferSingle', {
-    //         operator,
-    //         from,
-    //         to: this.toWhom,
-    //         id,
-    //         value,
-    //       });
-    //     });
-    //   }
-    //   context('when called by the multiTokenHolder', async function () {
-    //     beforeEach(async function () {
-    //       this.toWhom = recipient;
-    //       this.transferLogs = await this.token.safeTransferFrom(
-    //         multiTokenHolder,
-    //         recipient,
-    //         firstTokenId,
-    //         firstAmount,
-    //         '0x',
-    //         {
-    //           from: multiTokenHolder,
-    //         }
-    //       );
-    //     });
-    //     transferWasSuccessful.call(this, {
-    //       operator: multiTokenHolder,
-    //       from: multiTokenHolder,
-    //       id: firstTokenId,
-    //       value: firstAmount,
-    //     });
-    //     it('preserves existing balances which are not transferred by multiTokenHolder', async function () {
-    //       const balance1 = await this.token.balanceOf(
-    //         multiTokenHolder,
-    //         secondTokenId
-    //       );
-    //       expect(balance1).to.be.a.bignumber.equal(secondAmount);
-    //       const balance2 = await this.token.balanceOf(recipient, secondTokenId);
-    //       expect(balance2).to.be.a.bignumber.equal('0');
-    //     });
-    //   });
-    //   context(
-    //     'when called by an operator on behalf of the multiTokenHolder',
-    //     function () {
-    //       context(
-    //         'when operator is not approved by multiTokenHolder',
-    //         function () {
-    //           beforeEach(async function () {
-    //             await this.token.setApprovalForAll(proxy, false, {
-    //               from: multiTokenHolder,
-    //             });
-    //           });
-    //           it('reverts', async function () {
-    //             await expectRevert(
-    //               this.token.safeTransferFrom(
-    //                 multiTokenHolder,
-    //                 recipient,
-    //                 firstTokenId,
-    //                 firstAmount,
-    //                 '0x',
-    //                 {
-    //                   from: proxy,
-    //                 }
-    //               ),
-    //               'ERC1155: caller is not token owner or approved'
-    //             );
-    //           });
-    //         }
-    //       );
-    //       context('when operator is approved by multiTokenHolder', function () {
-    //         beforeEach(async function () {
-    //           this.toWhom = recipient;
-    //           await this.token.setApprovalForAll(proxy, true, {
-    //             from: multiTokenHolder,
-    //           });
-    //           this.transferLogs = await this.token.safeTransferFrom(
-    //             multiTokenHolder,
-    //             recipient,
-    //             firstTokenId,
-    //             firstAmount,
-    //             '0x',
-    //             {
-    //               from: proxy,
-    //             }
-    //           );
-    //         });
-    //         transferWasSuccessful.call(this, {
-    //           operator: proxy,
-    //           from: multiTokenHolder,
-    //           id: firstTokenId,
-    //           value: firstAmount,
-    //         });
-    //         it("preserves operator's balances not involved in the transfer", async function () {
-    //           const balance1 = await this.token.balanceOf(proxy, firstTokenId);
-    //           expect(balance1).to.be.a.bignumber.equal('0');
-    //           const balance2 = await this.token.balanceOf(proxy, secondTokenId);
-    //           expect(balance2).to.be.a.bignumber.equal('0');
-    //         });
-    //       });
-    //     }
-    //   );
-    //   context('when sending to a valid receiver', function () {
-    //     beforeEach(async function () {
-    //       this.receiver = await ERC1155ReceiverMock.new(
-    //         RECEIVER_SINGLE_MAGIC_VALUE,
-    //         false,
-    //         RECEIVER_BATCH_MAGIC_VALUE,
-    //         false
-    //       );
-    //     });
-    //     context('without data', function () {
-    //       beforeEach(async function () {
-    //         this.toWhom = this.receiver.address;
-    //         this.transferReceipt = await this.token.safeTransferFrom(
-    //           multiTokenHolder,
-    //           this.receiver.address,
-    //           firstTokenId,
-    //           firstAmount,
-    //           '0x',
-    //           { from: multiTokenHolder }
-    //         );
-    //         this.transferLogs = this.transferReceipt;
-    //       });
-    //       transferWasSuccessful.call(this, {
-    //         operator: multiTokenHolder,
-    //         from: multiTokenHolder,
-    //         id: firstTokenId,
-    //         value: firstAmount,
-    //       });
-    //       it('calls onERC1155Received', async function () {
-    //         await expectEvent.inTransaction(
-    //           this.transferReceipt.tx,
-    //           ERC1155ReceiverMock,
-    //           'Received',
-    //           {
-    //             operator: multiTokenHolder,
-    //             from: multiTokenHolder,
-    //             id: firstTokenId,
-    //             value: firstAmount,
-    //             data: null,
-    //           }
-    //         );
-    //       });
-    //     });
-    //     context('with data', function () {
-    //       const data = '0xf00dd00d';
-    //       beforeEach(async function () {
-    //         this.toWhom = this.receiver.address;
-    //         this.transferReceipt = await this.token.safeTransferFrom(
-    //           multiTokenHolder,
-    //           this.receiver.address,
-    //           firstTokenId,
-    //           firstAmount,
-    //           data,
-    //           { from: multiTokenHolder }
-    //         );
-    //         this.transferLogs = this.transferReceipt;
-    //       });
-    //       transferWasSuccessful.call(this, {
-    //         operator: multiTokenHolder,
-    //         from: multiTokenHolder,
-    //         id: firstTokenId,
-    //         value: firstAmount,
-    //       });
-    //       it('calls onERC1155Received', async function () {
-    //         await expectEvent.inTransaction(
-    //           this.transferReceipt.tx,
-    //           ERC1155ReceiverMock,
-    //           'Received',
-    //           {
-    //             operator: multiTokenHolder,
-    //             from: multiTokenHolder,
-    //             id: firstTokenId,
-    //             value: firstAmount,
-    //             data,
-    //           }
-    //         );
-    //       });
-    //     });
-    //   });
-    //   context('to a receiver contract returning unexpected value', function () {
-    //     beforeEach(async function () {
-    //       this.receiver = await ERC1155ReceiverMock.new(
-    //         '0x00c0ffee',
-    //         false,
-    //         RECEIVER_BATCH_MAGIC_VALUE,
-    //         false
-    //       );
-    //     });
-    //     it('reverts', async function () {
-    //       await expectRevert(
-    //         this.token.safeTransferFrom(
-    //           multiTokenHolder,
-    //           this.receiver.address,
-    //           firstTokenId,
-    //           firstAmount,
-    //           '0x',
-    //           {
-    //             from: multiTokenHolder,
-    //           }
-    //         ),
-    //         'ERC1155: ERC1155Receiver rejected tokens'
-    //       );
-    //     });
-    //   });
-    //   context('to a receiver contract that reverts', function () {
-    //     beforeEach(async function () {
-    //       this.receiver = await ERC1155ReceiverMock.new(
-    //         RECEIVER_SINGLE_MAGIC_VALUE,
-    //         true,
-    //         RECEIVER_BATCH_MAGIC_VALUE,
-    //         false
-    //       );
-    //     });
-    //     it('reverts', async function () {
-    //       await expectRevert(
-    //         this.token.safeTransferFrom(
-    //           multiTokenHolder,
-    //           this.receiver.address,
-    //           firstTokenId,
-    //           firstAmount,
-    //           '0x',
-    //           {
-    //             from: multiTokenHolder,
-    //           }
-    //         ),
-    //         'ERC1155ReceiverMock: reverting on receive'
-    //       );
-    //     });
-    //   });
-    //   context(
-    //     'to a contract that does not implement the required function',
-    //     function () {
-    //       it('reverts', async function () {
-    //         const invalidReceiver = this.token;
-    //         await expectRevert.unspecified(
-    //           this.token.safeTransferFrom(
-    //             multiTokenHolder,
-    //             invalidReceiver.address,
-    //             firstTokenId,
-    //             firstAmount,
-    //             '0x',
-    //             {
-    //               from: multiTokenHolder,
-    //             }
-    //           )
-    //         );
-    //       });
-    //     }
-    //   );
-    // });
 
-    // describe('safeBatchTransferFrom', function () {
-    //   beforeEach(async function () {
-    //     await this.token.mint(multiTokenHolder, firstTokenId, firstAmount, '0x', {
-    //       from: minter,
-    //     });
-    //     await this.token.mint(
-    //       multiTokenHolder,
-    //       secondTokenId,
-    //       secondAmount,
-    //       '0x',
-    //       {
-    //         from: minter,
-    //       }
-    //     );
-    //   });
-    //   it('reverts when transferring amount more than any of balances', async function () {
-    //     await expectRevert(
-    //       this.token.safeBatchTransferFrom(
-    //         multiTokenHolder,
-    //         recipient,
-    //         [firstTokenId, secondTokenId],
-    //         [firstAmount, secondAmount.addn(1)],
-    //         '0x',
-    //         { from: multiTokenHolder }
-    //       ),
-    //       'ERC1155: insufficient balance for transfer'
-    //     );
-    //   });
-    //   it("reverts when ids array length doesn't match amounts array length", async function () {
-    //     await expectRevert(
-    //       this.token.safeBatchTransferFrom(
-    //         multiTokenHolder,
-    //         recipient,
-    //         [firstTokenId],
-    //         [firstAmount, secondAmount],
-    //         '0x',
-    //         { from: multiTokenHolder }
-    //       ),
-    //       'ERC1155: ids and amounts length mismatch'
-    //     );
-    //     await expectRevert(
-    //       this.token.safeBatchTransferFrom(
-    //         multiTokenHolder,
-    //         recipient,
-    //         [firstTokenId, secondTokenId],
-    //         [firstAmount],
-    //         '0x',
-    //         { from: multiTokenHolder }
-    //       ),
-    //       'ERC1155: ids and amounts length mismatch'
-    //     );
-    //   });
-    //   it('reverts when transferring to zero address', async function () {
-    //     await expectRevert(
-    //       this.token.safeBatchTransferFrom(
-    //         multiTokenHolder,
-    //         ZERO_ADDRESS,
-    //         [firstTokenId, secondTokenId],
-    //         [firstAmount, secondAmount],
-    //         '0x',
-    //         { from: multiTokenHolder }
-    //       ),
-    //       'ERC1155: transfer to the zero address'
-    //     );
-    //   });
-    //   function batchTransferWasSuccessful({ operator, from, ids, values }) {
-    //     it('debits transferred balances from sender', async function () {
-    //       const newBalances = await this.token.balanceOfBatch(
-    //         new Array(ids.length).fill(from),
-    //         ids
-    //       );
-    //       for (const newBalance of newBalances) {
-    //         expect(newBalance).to.be.a.bignumber.equal('0');
-    //       }
-    //     });
-    //     it('credits transferred balances to receiver', async function () {
-    //       const newBalances = await this.token.balanceOfBatch(
-    //         new Array(ids.length).fill(this.toWhom),
-    //         ids
-    //       );
-    //       for (let i = 0; i < newBalances.length; i++) {
-    //         expect(newBalances[i]).to.be.a.bignumber.equal(values[i]);
-    //       }
-    //     });
-    //     it('emits a TransferBatch log', function () {
-    //       expectEvent(this.transferLogs, 'TransferBatch', {
-    //         operator,
-    //         from,
-    //         to: this.toWhom,
-    //         // ids,
-    //         // values,
-    //       });
-    //     });
-    //   }
-    //   context('when called by the multiTokenHolder', async function () {
-    //     beforeEach(async function () {
-    //       this.toWhom = recipient;
-    //       this.transferLogs = await this.token.safeBatchTransferFrom(
-    //         multiTokenHolder,
-    //         recipient,
-    //         [firstTokenId, secondTokenId],
-    //         [firstAmount, secondAmount],
-    //         '0x',
-    //         { from: multiTokenHolder }
-    //       );
-    //     });
-    //     batchTransferWasSuccessful.call(this, {
-    //       operator: multiTokenHolder,
-    //       from: multiTokenHolder,
-    //       ids: [firstTokenId, secondTokenId],
-    //       values: [firstAmount, secondAmount],
-    //     });
-    //   });
-    //   context(
-    //     'when called by an operator on behalf of the multiTokenHolder',
-    //     function () {
-    //       context(
-    //         'when operator is not approved by multiTokenHolder',
-    //         function () {
-    //           beforeEach(async function () {
-    //             await this.token.setApprovalForAll(proxy, false, {
-    //               from: multiTokenHolder,
-    //             });
-    //           });
-    //           it('reverts', async function () {
-    //             await expectRevert(
-    //               this.token.safeBatchTransferFrom(
-    //                 multiTokenHolder,
-    //                 recipient,
-    //                 [firstTokenId, secondTokenId],
-    //                 [firstAmount, secondAmount],
-    //                 '0x',
-    //                 { from: proxy }
-    //               ),
-    //               'ERC1155: caller is not token owner or approved'
-    //             );
-    //           });
-    //         }
-    //       );
-    //       context('when operator is approved by multiTokenHolder', function () {
-    //         beforeEach(async function () {
-    //           this.toWhom = recipient;
-    //           await this.token.setApprovalForAll(proxy, true, {
-    //             from: multiTokenHolder,
-    //           });
-    //           this.transferLogs = await this.token.safeBatchTransferFrom(
-    //             multiTokenHolder,
-    //             recipient,
-    //             [firstTokenId, secondTokenId],
-    //             [firstAmount, secondAmount],
-    //             '0x',
-    //             { from: proxy }
-    //           );
-    //         });
-    //         batchTransferWasSuccessful.call(this, {
-    //           operator: this.proxy,
-    //           from: multiTokenHolder,
-    //           ids: [firstTokenId, secondTokenId],
-    //           values: [firstAmount, secondAmount],
-    //         });
-    //         it("preserves operator's balances not involved in the transfer", async function () {
-    //           const balance1 = await this.token.balanceOf(proxy, firstTokenId);
-    //           expect(balance1).to.be.a.bignumber.equal('0');
-    //           const balance2 = await this.token.balanceOf(proxy, secondTokenId);
-    //           expect(balance2).to.be.a.bignumber.equal('0');
-    //         });
-    //       });
-    //     }
-    //   );
-    //   context('when sending to a valid receiver', function () {
-    //     beforeEach(async function () {
-    //       this.receiver = await ERC1155ReceiverMock.new(
-    //         RECEIVER_SINGLE_MAGIC_VALUE,
-    //         false,
-    //         RECEIVER_BATCH_MAGIC_VALUE,
-    //         false
-    //       );
-    //     });
-    //     context('without data', function () {
-    //       beforeEach(async function () {
-    //         this.toWhom = this.receiver.address;
-    //         this.transferReceipt = await this.token.safeBatchTransferFrom(
-    //           multiTokenHolder,
-    //           this.receiver.address,
-    //           [firstTokenId, secondTokenId],
-    //           [firstAmount, secondAmount],
-    //           '0x',
-    //           { from: multiTokenHolder }
-    //         );
-    //         this.transferLogs = this.transferReceipt;
-    //       });
-    //       batchTransferWasSuccessful.call(this, {
-    //         operator: multiTokenHolder,
-    //         from: multiTokenHolder,
-    //         ids: [firstTokenId, secondTokenId],
-    //         values: [firstAmount, secondAmount],
-    //       });
-    //       it('calls onERC1155BatchReceived', async function () {
-    //         await expectEvent.inTransaction(
-    //           this.transferReceipt.tx,
-    //           ERC1155ReceiverMock,
-    //           'BatchReceived',
-    //           {
-    //             operator: multiTokenHolder,
-    //             from: multiTokenHolder,
-    //             // ids: [firstTokenId, secondTokenId],
-    //             // values: [firstAmount, secondAmount],
-    //             data: null,
-    //           }
-    //         );
-    //       });
-    //     });
-    //     context('with data', function () {
-    //       const data = '0xf00dd00d';
-    //       beforeEach(async function () {
-    //         this.toWhom = this.receiver.address;
-    //         this.transferReceipt = await this.token.safeBatchTransferFrom(
-    //           multiTokenHolder,
-    //           this.receiver.address,
-    //           [firstTokenId, secondTokenId],
-    //           [firstAmount, secondAmount],
-    //           data,
-    //           { from: multiTokenHolder }
-    //         );
-    //         this.transferLogs = this.transferReceipt;
-    //       });
-    //       batchTransferWasSuccessful.call(this, {
-    //         operator: multiTokenHolder,
-    //         from: multiTokenHolder,
-    //         ids: [firstTokenId, secondTokenId],
-    //         values: [firstAmount, secondAmount],
-    //       });
-    //       it('calls onERC1155Received', async function () {
-    //         await expectEvent.inTransaction(
-    //           this.transferReceipt.tx,
-    //           ERC1155ReceiverMock,
-    //           'BatchReceived',
-    //           {
-    //             operator: multiTokenHolder,
-    //             from: multiTokenHolder,
-    //             // ids: [firstTokenId, secondTokenId],
-    //             // values: [firstAmount, secondAmount],
-    //             data,
-    //           }
-    //         );
-    //       });
-    //     });
-    //   });
-    //   context('to a receiver contract returning unexpected value', function () {
-    //     beforeEach(async function () {
-    //       this.receiver = await ERC1155ReceiverMock.new(
-    //         RECEIVER_SINGLE_MAGIC_VALUE,
-    //         false,
-    //         RECEIVER_SINGLE_MAGIC_VALUE,
-    //         false
-    //       );
-    //     });
-    //     it('reverts', async function () {
-    //       await expectRevert(
-    //         this.token.safeBatchTransferFrom(
-    //           multiTokenHolder,
-    //           this.receiver.address,
-    //           [firstTokenId, secondTokenId],
-    //           [firstAmount, secondAmount],
-    //           '0x',
-    //           { from: multiTokenHolder }
-    //         ),
-    //         'ERC1155: ERC1155Receiver rejected tokens'
-    //       );
-    //     });
-    //   });
-    //   context('to a receiver contract that reverts', function () {
-    //     beforeEach(async function () {
-    //       this.receiver = await ERC1155ReceiverMock.new(
-    //         RECEIVER_SINGLE_MAGIC_VALUE,
-    //         false,
-    //         RECEIVER_BATCH_MAGIC_VALUE,
-    //         true
-    //       );
-    //     });
-    //     it('reverts', async function () {
-    //       await expectRevert(
-    //         this.token.safeBatchTransferFrom(
-    //           multiTokenHolder,
-    //           this.receiver.address,
-    //           [firstTokenId, secondTokenId],
-    //           [firstAmount, secondAmount],
-    //           '0x',
-    //           { from: multiTokenHolder }
-    //         ),
-    //         'ERC1155ReceiverMock: reverting on batch receive'
-    //       );
-    //     });
-    //   });
-    //   context(
-    //     'to a receiver contract that reverts only on single transfers',
-    //     function () {
-    //       beforeEach(async function () {
-    //         this.receiver = await ERC1155ReceiverMock.new(
-    //           RECEIVER_SINGLE_MAGIC_VALUE,
-    //           true,
-    //           RECEIVER_BATCH_MAGIC_VALUE,
-    //           false
-    //         );
-    //         this.toWhom = this.receiver.address;
-    //         this.transferReceipt = await this.token.safeBatchTransferFrom(
-    //           multiTokenHolder,
-    //           this.receiver.address,
-    //           [firstTokenId, secondTokenId],
-    //           [firstAmount, secondAmount],
-    //           '0x',
-    //           { from: multiTokenHolder }
-    //         );
-    //         this.transferLogs = this.transferReceipt;
-    //       });
-    //       batchTransferWasSuccessful.call(this, {
-    //         operator: multiTokenHolder,
-    //         from: multiTokenHolder,
-    //         ids: [firstTokenId, secondTokenId],
-    //         values: [firstAmount, secondAmount],
-    //       });
-    //       it('calls onERC1155BatchReceived', async function () {
-    //         await expectEvent.inTransaction(
-    //           this.transferReceipt.tx,
-    //           ERC1155ReceiverMock,
-    //           'BatchReceived',
-    //           {
-    //             operator: multiTokenHolder,
-    //             from: multiTokenHolder,
-    //             // ids: [firstTokenId, secondTokenId],
-    //             // values: [firstAmount, secondAmount],
-    //             data: null,
-    //           }
-    //         );
-    //       });
-    //     }
-    //   );
-    //   context(
-    //     'to a contract that does not implement the required function',
-    //     function () {
-    //       it('reverts', async function () {
-    //         const invalidReceiver = this.token;
-    //         await expectRevert.unspecified(
-    //           this.token.safeBatchTransferFrom(
-    //             multiTokenHolder,
-    //             invalidReceiver.address,
-    //             [firstTokenId, secondTokenId],
-    //             [firstAmount, secondAmount],
-    //             '0x',
-    //             { from: multiTokenHolder }
-    //           )
-    //         );
-    //       });
-    //     }
-    //   );
-    // });
+    describe('5. safeTransferFrom', function () {
+      beforeEach(async function () {
+        const tx1 = await this.token
+          .connect(this.minter)
+          .mint(this.multiTokenHolder.address, firstTokenId, firstAmount, '0x');
+        await tx1.wait();
+
+        const tx2 = await this.token
+          .connect(this.minter)
+          .mint(
+            this.multiTokenHolder.address,
+            secondTokenId,
+            secondAmount,
+            '0x'
+          );
+        await tx2.wait();
+      });
+
+      it('should revert when transferring more than balance', async function () {
+        // await expectRevert(
+        //   this.token.connect(multiTokenHolder).safeTransferFrom(
+        //     multiTokenHolder,
+        //     recipient,
+        //     firstTokenId,
+        //     firstAmount.addn(1),
+        //     '0x',
+        //   ),
+        //   'ERC1155: insufficient balance for transfer'
+        // );
+        await expect(
+          this.token
+            .connect(this.multiTokenHolder)
+            .safeTransferFrom(
+              this.multiTokenHolder.address,
+              this.recipient.address,
+              firstTokenId,
+              firstAmount.add('1'),
+              '0x'
+            )
+        ).to.be.reverted;
+      });
+
+      it('should revert when transferring to zero address', async function () {
+        // await expectRevert(
+        //   this.token
+        //     .connect(this.multiTokenHolder)
+        //     .safeTransferFrom(
+        //       this.multiTokenHolder.address,
+        //       this.ZERO_ADDRESS.address,
+        //       firstTokenId,
+        //       firstAmount,
+        //       '0x'
+        //     ),
+        //   'ERC1155: transfer to the zero address'
+        // );
+        await expect(
+          this.token
+            .connect(this.multiTokenHolder)
+            .safeTransferFrom(
+              this.multiTokenHolder.address,
+              ZERO_ADDRESS,
+              firstTokenId,
+              firstAmount,
+              '0x'
+            )
+        ).to.be.reverted;
+      });
+
+      function transferWasSuccessful({ operator, from, id, value }) {
+        it('debits transferred balance from sender', async function () {
+          const newBalance = await this.token.balanceOf(from, id);
+          expect(newBalance).to.deep.equal(zeroAmount);
+        });
+
+        it('credits transferred balance to receiver', async function () {
+          const newBalance = await this.token.balanceOf(this.toWhom, id);
+          expect(newBalance).to.deep.equal(value);
+        });
+
+        it('emits a TransferSingle log', function () {
+          expectEvent(this.transferLogs, 'TransferSingle', {
+            operator,
+            from,
+            to,
+            id,
+            value,
+          });
+        });
+      }
+
+      context('1) when called by the multiTokenHolder', async function () {
+        beforeEach(async function () {
+          this.toWhom = this.recipient.address;
+          this.transferLogs = await this.token
+            .connect(this.multiTokenHolder)
+            .safeTransferFrom(
+              this.multiTokenHolder.address,
+              this.recipient.address,
+              firstTokenId,
+              firstAmount,
+              '0x'
+            );
+        });
+
+        it('should preserve existing balances which are not transferred by multiTokenHolder', async function () {
+          transferWasSuccessful.call(this, {
+            operator: await this.multiTokenHolder.address,
+            from: await this.multiTokenHolder.address,
+            id: firstTokenId,
+            value: firstAmount,
+          });
+
+          const balance1 = await this.token.balanceOf(
+            this.multiTokenHolder.address,
+            secondTokenId
+          );
+          expect(balance1).to.deep.equal(secondAmount);
+          const balance2 = await this.token.balanceOf(
+            this.recipient.address,
+            secondTokenId
+          );
+          expect(balance2).to.deep.equal(zeroAmount);
+        });
+      });
+
+      // context(
+      //   'when called by an operator on behalf of the multiTokenHolder',
+      //   function () {
+      //     context(
+      //       'when operator is not approved by multiTokenHolder',
+      //       function () {
+      //         beforeEach(async function () {
+      //           await this.token.setApprovalForAll(proxy, false, {
+      //             from: multiTokenHolder,
+      //           });
+      //         });
+      //         it('reverts', async function () {
+      //           await expectRevert(
+      //             this.token.safeTransferFrom(
+      //               multiTokenHolder,
+      //               recipient,
+      //               firstTokenId,
+      //               firstAmount,
+      //               '0x',
+      //               {
+      //                 from: proxy,
+      //               }
+      //             ),
+      //             'ERC1155: caller is not token owner or approved'
+      //           );
+      //         });
+      //       }
+      //     );
+
+      //       context('when operator is approved by multiTokenHolder', function () {
+      //         beforeEach(async function () {
+      //           this.toWhom = recipient;
+      //           await this.token.setApprovalForAll(proxy, true, {
+      //             from: multiTokenHolder,
+      //           });
+      //           this.transferLogs = await this.token.safeTransferFrom(
+      //             multiTokenHolder,
+      //             recipient,
+      //             firstTokenId,
+      //             firstAmount,
+      //             '0x',
+      //             {
+      //               from: proxy,
+      //             }
+      //           );
+      //         });
+      //         transferWasSuccessful.call(this, {
+      //           operator: proxy,
+      //           from: multiTokenHolder,
+      //           id: firstTokenId,
+      //           value: firstAmount,
+      //         });
+      //         it("preserves operator's balances not involved in the transfer", async function () {
+      //           const balance1 = await this.token.balanceOf(proxy, firstTokenId);
+      //           expect(balance1).to.be.a.bignumber.equal('0');
+      //           const balance2 = await this.token.balanceOf(proxy, secondTokenId);
+      //           expect(balance2).to.be.a.bignumber.equal('0');
+      //         });
+      //       });
+      //     }
+      //   );
+      //   context('when sending to a valid receiver', function () {
+      //     beforeEach(async function () {
+      //       this.receiver = await ERC1155ReceiverMock.new(
+      //         RECEIVER_SINGLE_MAGIC_VALUE,
+      //         false,
+      //         RECEIVER_BATCH_MAGIC_VALUE,
+      //         false
+      //       );
+      //     });
+      //     context('without data', function () {
+      //       beforeEach(async function () {
+      //         this.toWhom = this.receiver.address;
+      //         this.transferReceipt = await this.token.safeTransferFrom(
+      //           multiTokenHolder,
+      //           this.receiver.address,
+      //           firstTokenId,
+      //           firstAmount,
+      //           '0x',
+      //           { from: multiTokenHolder }
+      //         );
+      //         this.transferLogs = this.transferReceipt;
+      //       });
+      //       transferWasSuccessful.call(this, {
+      //         operator: multiTokenHolder,
+      //         from: multiTokenHolder,
+      //         id: firstTokenId,
+      //         value: firstAmount,
+      //       });
+      //       it('calls onERC1155Received', async function () {
+      //         await expectEvent.inTransaction(
+      //           this.transferReceipt.tx,
+      //           ERC1155ReceiverMock,
+      //           'Received',
+      //           {
+      //             operator: multiTokenHolder,
+      //             from: multiTokenHolder,
+      //             id: firstTokenId,
+      //             value: firstAmount,
+      //             data: null,
+      //           }
+      //         );
+      //       });
+      //     });
+      //     context('with data', function () {
+      //       const data = '0xf00dd00d';
+      //       beforeEach(async function () {
+      //         this.toWhom = this.receiver.address;
+      //         this.transferReceipt = await this.token.safeTransferFrom(
+      //           multiTokenHolder,
+      //           this.receiver.address,
+      //           firstTokenId,
+      //           firstAmount,
+      //           data,
+      //           { from: multiTokenHolder }
+      //         );
+      //         this.transferLogs = this.transferReceipt;
+      //       });
+      //       transferWasSuccessful.call(this, {
+      //         operator: multiTokenHolder,
+      //         from: multiTokenHolder,
+      //         id: firstTokenId,
+      //         value: firstAmount,
+      //       });
+      //       it('calls onERC1155Received', async function () {
+      //         await expectEvent.inTransaction(
+      //           this.transferReceipt.tx,
+      //           ERC1155ReceiverMock,
+      //           'Received',
+      //           {
+      //             operator: multiTokenHolder,
+      //             from: multiTokenHolder,
+      //             id: firstTokenId,
+      //             value: firstAmount,
+      //             data,
+      //           }
+      //         );
+      //       });
+      //     });
+      //   });
+      //   context('to a receiver contract returning unexpected value', function () {
+      //     beforeEach(async function () {
+      //       this.receiver = await ERC1155ReceiverMock.new(
+      //         '0x00c0ffee',
+      //         false,
+      //         RECEIVER_BATCH_MAGIC_VALUE,
+      //         false
+      //       );
+      //     });
+      //     it('reverts', async function () {
+      //       await expectRevert(
+      //         this.token.safeTransferFrom(
+      //           multiTokenHolder,
+      //           this.receiver.address,
+      //           firstTokenId,
+      //           firstAmount,
+      //           '0x',
+      //           {
+      //             from: multiTokenHolder,
+      //           }
+      //         ),
+      //         'ERC1155: ERC1155Receiver rejected tokens'
+      //       );
+      //     });
+      //   });
+      //   context('to a receiver contract that reverts', function () {
+      //     beforeEach(async function () {
+      //       this.receiver = await ERC1155ReceiverMock.new(
+      //         RECEIVER_SINGLE_MAGIC_VALUE,
+      //         true,
+      //         RECEIVER_BATCH_MAGIC_VALUE,
+      //         false
+      //       );
+      //     });
+      //     it('reverts', async function () {
+      //       await expectRevert(
+      //         this.token.safeTransferFrom(
+      //           multiTokenHolder,
+      //           this.receiver.address,
+      //           firstTokenId,
+      //           firstAmount,
+      //           '0x',
+      //           {
+      //             from: multiTokenHolder,
+      //           }
+      //         ),
+      //         'ERC1155ReceiverMock: reverting on receive'
+      //       );
+      //     });
+      //   });
+      //   context(
+      //     'to a contract that does not implement the required function',
+      //     function () {
+      //       it('reverts', async function () {
+      //         const invalidReceiver = this.token;
+      //         await expectRevert.unspecified(
+      //           this.token.safeTransferFrom(
+      //             multiTokenHolder,
+      //             invalidReceiver.address,
+      //             firstTokenId,
+      //             firstAmount,
+      //             '0x',
+      //             {
+      //               from: multiTokenHolder,
+      //             }
+      //           )
+      //         );
+      //       });
+      //     }
+      //   );
+      // });
+
+      // describe('safeBatchTransferFrom', function () {
+      //   beforeEach(async function () {
+      //     await this.token.mint(multiTokenHolder, firstTokenId, firstAmount, '0x', {
+      //       from: minter,
+      //     });
+      //     await this.token.mint(
+      //       multiTokenHolder,
+      //       secondTokenId,
+      //       secondAmount,
+      //       '0x',
+      //       {
+      //         from: minter,
+      //       }
+      //     );
+      //   });
+      //   it('reverts when transferring amount more than any of balances', async function () {
+      //     await expectRevert(
+      //       this.token.safeBatchTransferFrom(
+      //         multiTokenHolder,
+      //         recipient,
+      //         [firstTokenId, secondTokenId],
+      //         [firstAmount, secondAmount.addn(1)],
+      //         '0x',
+      //         { from: multiTokenHolder }
+      //       ),
+      //       'ERC1155: insufficient balance for transfer'
+      //     );
+      //   });
+      //   it("reverts when ids array length doesn't match amounts array length", async function () {
+      //     await expectRevert(
+      //       this.token.safeBatchTransferFrom(
+      //         multiTokenHolder,
+      //         recipient,
+      //         [firstTokenId],
+      //         [firstAmount, secondAmount],
+      //         '0x',
+      //         { from: multiTokenHolder }
+      //       ),
+      //       'ERC1155: ids and amounts length mismatch'
+      //     );
+      //     await expectRevert(
+      //       this.token.safeBatchTransferFrom(
+      //         multiTokenHolder,
+      //         recipient,
+      //         [firstTokenId, secondTokenId],
+      //         [firstAmount],
+      //         '0x',
+      //         { from: multiTokenHolder }
+      //       ),
+      //       'ERC1155: ids and amounts length mismatch'
+      //     );
+      //   });
+      //   it('reverts when transferring to zero address', async function () {
+      //     await expectRevert(
+      //       this.token.safeBatchTransferFrom(
+      //         multiTokenHolder,
+      //         ZERO_ADDRESS,
+      //         [firstTokenId, secondTokenId],
+      //         [firstAmount, secondAmount],
+      //         '0x',
+      //         { from: multiTokenHolder }
+      //       ),
+      //       'ERC1155: transfer to the zero address'
+      //     );
+      //   });
+      //   function batchTransferWasSuccessful({ operator, from, ids, values }) {
+      //     it('debits transferred balances from sender', async function () {
+      //       const newBalances = await this.token.balanceOfBatch(
+      //         new Array(ids.length).fill(from),
+      //         ids
+      //       );
+      //       for (const newBalance of newBalances) {
+      //         expect(newBalance).to.be.a.bignumber.equal('0');
+      //       }
+      //     });
+      //     it('credits transferred balances to receiver', async function () {
+      //       const newBalances = await this.token.balanceOfBatch(
+      //         new Array(ids.length).fill(this.toWhom),
+      //         ids
+      //       );
+      //       for (let i = 0; i < newBalances.length; i++) {
+      //         expect(newBalances[i]).to.be.a.bignumber.equal(values[i]);
+      //       }
+      //     });
+      //     it('emits a TransferBatch log', function () {
+      //       expectEvent(this.transferLogs, 'TransferBatch', {
+      //         operator,
+      //         from,
+      //         to: this.toWhom,
+      //         // ids,
+      //         // values,
+      //       });
+      //     });
+      //   }
+      //   context('when called by the multiTokenHolder', async function () {
+      //     beforeEach(async function () {
+      //       this.toWhom = recipient;
+      //       this.transferLogs = await this.token.safeBatchTransferFrom(
+      //         multiTokenHolder,
+      //         recipient,
+      //         [firstTokenId, secondTokenId],
+      //         [firstAmount, secondAmount],
+      //         '0x',
+      //         { from: multiTokenHolder }
+      //       );
+      //     });
+      //     batchTransferWasSuccessful.call(this, {
+      //       operator: multiTokenHolder,
+      //       from: multiTokenHolder,
+      //       ids: [firstTokenId, secondTokenId],
+      //       values: [firstAmount, secondAmount],
+      //     });
+      //   });
+      //   context(
+      //     'when called by an operator on behalf of the multiTokenHolder',
+      //     function () {
+      //       context(
+      //         'when operator is not approved by multiTokenHolder',
+      //         function () {
+      //           beforeEach(async function () {
+      //             await this.token.setApprovalForAll(proxy, false, {
+      //               from: multiTokenHolder,
+      //             });
+      //           });
+      //           it('reverts', async function () {
+      //             await expectRevert(
+      //               this.token.safeBatchTransferFrom(
+      //                 multiTokenHolder,
+      //                 recipient,
+      //                 [firstTokenId, secondTokenId],
+      //                 [firstAmount, secondAmount],
+      //                 '0x',
+      //                 { from: proxy }
+      //               ),
+      //               'ERC1155: caller is not token owner or approved'
+      //             );
+      //           });
+      //         }
+      //       );
+      //       context('when operator is approved by multiTokenHolder', function () {
+      //         beforeEach(async function () {
+      //           this.toWhom = recipient;
+      //           await this.token.setApprovalForAll(proxy, true, {
+      //             from: multiTokenHolder,
+      //           });
+      //           this.transferLogs = await this.token.safeBatchTransferFrom(
+      //             multiTokenHolder,
+      //             recipient,
+      //             [firstTokenId, secondTokenId],
+      //             [firstAmount, secondAmount],
+      //             '0x',
+      //             { from: proxy }
+      //           );
+      //         });
+      //         batchTransferWasSuccessful.call(this, {
+      //           operator: this.proxy,
+      //           from: multiTokenHolder,
+      //           ids: [firstTokenId, secondTokenId],
+      //           values: [firstAmount, secondAmount],
+      //         });
+      //         it("preserves operator's balances not involved in the transfer", async function () {
+      //           const balance1 = await this.token.balanceOf(proxy, firstTokenId);
+      //           expect(balance1).to.be.a.bignumber.equal('0');
+      //           const balance2 = await this.token.balanceOf(proxy, secondTokenId);
+      //           expect(balance2).to.be.a.bignumber.equal('0');
+      //         });
+      //       });
+      //     }
+      //   );
+      //   context('when sending to a valid receiver', function () {
+      //     beforeEach(async function () {
+      //       this.receiver = await ERC1155ReceiverMock.new(
+      //         RECEIVER_SINGLE_MAGIC_VALUE,
+      //         false,
+      //         RECEIVER_BATCH_MAGIC_VALUE,
+      //         false
+      //       );
+      //     });
+      //     context('without data', function () {
+      //       beforeEach(async function () {
+      //         this.toWhom = this.receiver.address;
+      //         this.transferReceipt = await this.token.safeBatchTransferFrom(
+      //           multiTokenHolder,
+      //           this.receiver.address,
+      //           [firstTokenId, secondTokenId],
+      //           [firstAmount, secondAmount],
+      //           '0x',
+      //           { from: multiTokenHolder }
+      //         );
+      //         this.transferLogs = this.transferReceipt;
+      //       });
+      //       batchTransferWasSuccessful.call(this, {
+      //         operator: multiTokenHolder,
+      //         from: multiTokenHolder,
+      //         ids: [firstTokenId, secondTokenId],
+      //         values: [firstAmount, secondAmount],
+      //       });
+      //       it('calls onERC1155BatchReceived', async function () {
+      //         await expectEvent.inTransaction(
+      //           this.transferReceipt.tx,
+      //           ERC1155ReceiverMock,
+      //           'BatchReceived',
+      //           {
+      //             operator: multiTokenHolder,
+      //             from: multiTokenHolder,
+      //             // ids: [firstTokenId, secondTokenId],
+      //             // values: [firstAmount, secondAmount],
+      //             data: null,
+      //           }
+      //         );
+      //       });
+      //     });
+      //     context('with data', function () {
+      //       const data = '0xf00dd00d';
+      //       beforeEach(async function () {
+      //         this.toWhom = this.receiver.address;
+      //         this.transferReceipt = await this.token.safeBatchTransferFrom(
+      //           multiTokenHolder,
+      //           this.receiver.address,
+      //           [firstTokenId, secondTokenId],
+      //           [firstAmount, secondAmount],
+      //           data,
+      //           { from: multiTokenHolder }
+      //         );
+      //         this.transferLogs = this.transferReceipt;
+      //       });
+      //       batchTransferWasSuccessful.call(this, {
+      //         operator: multiTokenHolder,
+      //         from: multiTokenHolder,
+      //         ids: [firstTokenId, secondTokenId],
+      //         values: [firstAmount, secondAmount],
+      //       });
+      //       it('calls onERC1155Received', async function () {
+      //         await expectEvent.inTransaction(
+      //           this.transferReceipt.tx,
+      //           ERC1155ReceiverMock,
+      //           'BatchReceived',
+      //           {
+      //             operator: multiTokenHolder,
+      //             from: multiTokenHolder,
+      //             // ids: [firstTokenId, secondTokenId],
+      //             // values: [firstAmount, secondAmount],
+      //             data,
+      //           }
+      //         );
+      //       });
+      //     });
+      //   });
+      //   context('to a receiver contract returning unexpected value', function () {
+      //     beforeEach(async function () {
+      //       this.receiver = await ERC1155ReceiverMock.new(
+      //         RECEIVER_SINGLE_MAGIC_VALUE,
+      //         false,
+      //         RECEIVER_SINGLE_MAGIC_VALUE,
+      //         false
+      //       );
+      //     });
+      //     it('reverts', async function () {
+      //       await expectRevert(
+      //         this.token.safeBatchTransferFrom(
+      //           multiTokenHolder,
+      //           this.receiver.address,
+      //           [firstTokenId, secondTokenId],
+      //           [firstAmount, secondAmount],
+      //           '0x',
+      //           { from: multiTokenHolder }
+      //         ),
+      //         'ERC1155: ERC1155Receiver rejected tokens'
+      //       );
+      //     });
+      //   });
+      //   context('to a receiver contract that reverts', function () {
+      //     beforeEach(async function () {
+      //       this.receiver = await ERC1155ReceiverMock.new(
+      //         RECEIVER_SINGLE_MAGIC_VALUE,
+      //         false,
+      //         RECEIVER_BATCH_MAGIC_VALUE,
+      //         true
+      //       );
+      //     });
+      //     it('reverts', async function () {
+      //       await expectRevert(
+      //         this.token.safeBatchTransferFrom(
+      //           multiTokenHolder,
+      //           this.receiver.address,
+      //           [firstTokenId, secondTokenId],
+      //           [firstAmount, secondAmount],
+      //           '0x',
+      //           { from: multiTokenHolder }
+      //         ),
+      //         'ERC1155ReceiverMock: reverting on batch receive'
+      //       );
+      //     });
+      //   });
+      //   context(
+      //     'to a receiver contract that reverts only on single transfers',
+      //     function () {
+      //       beforeEach(async function () {
+      //         this.receiver = await ERC1155ReceiverMock.new(
+      //           RECEIVER_SINGLE_MAGIC_VALUE,
+      //           true,
+      //           RECEIVER_BATCH_MAGIC_VALUE,
+      //           false
+      //         );
+      //         this.toWhom = this.receiver.address;
+      //         this.transferReceipt = await this.token.safeBatchTransferFrom(
+      //           multiTokenHolder,
+      //           this.receiver.address,
+      //           [firstTokenId, secondTokenId],
+      //           [firstAmount, secondAmount],
+      //           '0x',
+      //           { from: multiTokenHolder }
+      //         );
+      //         this.transferLogs = this.transferReceipt;
+      //       });
+      //       batchTransferWasSuccessful.call(this, {
+      //         operator: multiTokenHolder,
+      //         from: multiTokenHolder,
+      //         ids: [firstTokenId, secondTokenId],
+      //         values: [firstAmount, secondAmount],
+      //       });
+      //       it('calls onERC1155BatchReceived', async function () {
+      //         await expectEvent.inTransaction(
+      //           this.transferReceipt.tx,
+      //           ERC1155ReceiverMock,
+      //           'BatchReceived',
+      //           {
+      //             operator: multiTokenHolder,
+      //             from: multiTokenHolder,
+      //             // ids: [firstTokenId, secondTokenId],
+      //             // values: [firstAmount, secondAmount],
+      //             data: null,
+      //           }
+      //         );
+      //       });
+      //     }
+      //   );
+      //   context(
+      //     'to a contract that does not implement the required function',
+      //     function () {
+      //       it('reverts', async function () {
+      //         const invalidReceiver = this.token;
+      //         await expectRevert.unspecified(
+      //           this.token.safeBatchTransferFrom(
+      //             multiTokenHolder,
+      //             invalidReceiver.address,
+      //             [firstTokenId, secondTokenId],
+      //             [firstAmount, secondAmount],
+      //             '0x',
+      //             { from: multiTokenHolder }
+      //           )
+      //         );
+      //       });
+      //     }
+      //   );
+    });
 
     // shouldSupportInterfaces(['ERC165', 'ERC1155']);
   });
