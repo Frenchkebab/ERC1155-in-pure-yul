@@ -71,8 +71,8 @@ contract('ERC115', function (accounts) {
     );
     await setContract.wait();
 
-    this.token = await erc1155YulCaller;
-    // this.token = erc1155Yul; //! not working
+    // this.token = await erc1155YulCaller;
+    this.token = erc1155Yul; //! not working
 
     [
       this.operator,

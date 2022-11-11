@@ -2,20 +2,20 @@ object "ERC1155Yul" {
     code {
         /*
          * slot0: owner
-         * slot1: balances
-         * slot2: operatorApprovals
-         * slot3: uri len
+         * slot2: uri len
          * slot (url len): uri
+         * slot keccak256(account,id) : balance[account][id]
+         * slot keccak256(owner,operator) : operatorApproval[owner][operator]
          */
 
         // slot0: owner
         sstore(0, caller())
 
         // slot3: uri len: 0x19
-        sstore(3, 0x19)
+        sstore(2, 0x19)
 
         // slot (uri len): uri https://token-cdn-domain/ (length(bytes): 25(dec) 0x19(hex))
-        sstore(sload(3), 0x68747470733a2f2f746f6b656e2d63646e2d646f6d61696e2f00000000000000)
+        sstore(sload(2), 0x68747470733a2f2f746f6b656e2d63646e2d646f6d61696e2f00000000000000)
 
         // Deploy the contract
         datacopy(0, dataoffset("runtime"), datasize("runtime"))
@@ -41,7 +41,7 @@ object "ERC1155Yul" {
                 balanceOfBatch(decodeAsUint(0), decodeAsUint(1))
             }
             case 0xe985e9c5 /* "isApprovedForAll(address,address)" */ {
-
+                returnUint(isApprovedForAll(decodeAsAddress(0), decodeAsAddress(1)))
             }
             case 0x2eb2c2d6 /* "safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)" */ {
                 
@@ -50,14 +50,13 @@ object "ERC1155Yul" {
 
             }
             case 0xa22cb465 /* "setApprovalForAll(address,bool)" */ {
-
+                setApprovalForAll(decodeAsAddress(0), decodeAsBool(1))
             }
             case 0x01ffc9a7 /* "supportsInterface(bytes4)" */ {
 
             }
             case 0x0e89341C /* uri(uint256) */ {
                 getUri(decodeAsUint(0))
-
             }
             case 0x731133e9 /* mint(address,uint256,uint256,bytes) */ {
                 mint(decodeAsAddress(0), decodeAsUint(1), decodeAsUint(2))
@@ -84,7 +83,7 @@ object "ERC1155Yul" {
                 
                 let returnLen := 0
 
-                let uriLen := sload(3)
+                let uriLen := sload(2)
                 returnLen := add(returnLen, uriLen)
 
                 let uriVal := sload(uriLen)
@@ -195,18 +194,21 @@ object "ERC1155Yul" {
                 _mint(to, id, amount)
             }
 
+            function setApprovalForAll(operator, id) {
+                _setApprovalForall(caller(), operator, id)
+            }
+
+            function isApprovedForAll(account, operator) -> v {
+                let offset := operatorApprovalStorageOffset(account, operator)
+                v := sload(offset)
+            }
+
             /* -------- storage layout ---------- */
             function ownerPos() -> p { p := 0 }
 
             function balancesPos() -> p { p := 1 }
 
-            function operationApprovalsPos() -> p { p:= 2 }
-
             function uriLenPos() -> p { p := 3 }
-
-            function accountToStorageOffset(account) -> offset {
-                offset := account
-            }
 
             function balanceStorageOffset(account, id) -> offset {
                 mstore(0, id)
@@ -214,10 +216,9 @@ object "ERC1155Yul" {
                 offset := keccak256(0, 0x40)
             }
 
-            function allowanceStorageOffset(account, spender) -> offset {
-                offset := accountToStorageOffset(account)
-                mstore(0, offset)
-                mstore(0x20, spender)
+            function operatorApprovalStorageOffset(owner, operator) -> offset {
+                mstore(0, owner)
+                mstore(0x20, operator)
                 offset := keccak256(0, 0x40)
             }
 
@@ -235,14 +236,22 @@ object "ERC1155Yul" {
                 sstore(offset, safeAdd(prev, amount))
             }
 
+            function _setApprovalForall(owner, operator, approved) {
+                require(iszero(eq(owner, operator)))
+                let offset := operatorApprovalStorageOffset(owner, operator)
+                sstore(offset, approved)
+                emitApprovalForAll(owner, operator, approved)
+            }
+
             /* ----------  calldata Decoding functions ---------- */
             function selector() -> s {
                 s := div(calldataload(0), 0x100000000000000000000000000000000000000000000000000000000)
             }
 
             function decodeAsAddress(offset) -> v {
-                v := decodeAsUint(offset)
-                revertInValidAddress(v)
+                let val := decodeAsUint(offset)
+                revertInValidAddress(val)
+                v := val
             }
 
             function decodeAsUint(offset) -> v {
@@ -251,6 +260,21 @@ object "ERC1155Yul" {
                     revert(0, 0)
                 }
                 v := calldataload(pos)
+            }
+
+            function decodeAsBool(offset) -> v {
+                let val := decodeAsUint(offset)
+                if eq(val, 0x0000000000000000000000000000000000000000000000000000000000000000) {
+                    v := val
+                    leave
+                }
+
+                if eq(val, 0x0000000000000000000000000000000000000000000000000000000000000001) {
+                    v := val
+                    leave
+                }
+
+                revert(0, 0)
             }
 
             function decodeAsArrayLen(pos) -> len {
@@ -280,6 +304,10 @@ object "ERC1155Yul" {
             function returnTrue() {
                 returnUint(1)
             }
+            
+            function returnFalse() {
+                returnUint(0)
+            }
 
             /* ----------  events ---------- */
             function emitTransferSingle(operator, from, to, id, value) {
@@ -287,9 +315,15 @@ object "ERC1155Yul" {
                 let signatureHash := 0x9e6acd20e3f2497dbc8f7c785e2922c6550e2c7182ab2da2637b302b65b416fd
                 mstore(0x00, id)
                 mstore(0x20, value)
-                log3(0x00, 0x40, operator, from, to)
+                log4(0x00, 0x40, signatureHash, operator, from, to)
             }
 
+            function emitApprovalForAll(owner, operator, approved) {
+                /* ApprovalForAll(adderss,address,bool) */
+                let signatureHash := 0x17307eab39ab6107e8899845ad3d59bd9653f200f220920489ca2b5937696c31
+                mstore(0x00, approved)
+                log3(0x00, 0x20, signatureHash, owner, operator)
+            }
 
             /* ---------- utility functions ---------- */
 

@@ -117,7 +117,7 @@ interface IERC1155 is IERC165 {
         bytes calldata data
     ) external;
 
-    function uri(uint256 id) external pure returns (string memory);
+    function uri(uint256 id) external view returns (string memory);
 
     function mint(address to, uint256 id, uint256 amount, bytes calldata data) external;
 

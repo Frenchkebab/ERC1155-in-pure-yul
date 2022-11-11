@@ -31,4 +31,8 @@ contract ERC1155YulCaller {
         // (, bytes memory data) = address(erc1155Yul).staticcall(abi.encodeWithSignature("balanceOfBatch(address[],uint256[]", accounts, ids));
         // return data;
     }
+
+    function setApprovalForAll(address operator, bool approved) external {
+        erc1155Yul.setApprovalForAll(operator, approved);
+    }
 }

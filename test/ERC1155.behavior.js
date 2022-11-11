@@ -30,48 +30,50 @@ function shouldBehaveLikeERC1155() {
   const RECEIVER_SINGLE_MAGIC_VALUE = '0xf23a6e61';
   const RECEIVER_BATCH_MAGIC_VALUE = '0xbc197c81';
 
-  describe('IERC1155 functions', function () {
-    describe('1. uri', async function () {
-      it('should return uri string with id input substituted', async function () {
-        const ID0 = 0;
-        const ID1 = 1;
-        const ID2 = 1234;
-        expect(await this.token.uri(BigNumber.from(ID0))).to.equal(
-          `https://token-cdn-domain/${ID0}.json`
-        );
-        expect(await this.token.uri(BigNumber.from(ID1))).to.equal(
-          `https://token-cdn-domain/${ID1}.json`
-        );
-        expect(await this.token.uri(BigNumber.from(ID2))).to.equal(
-          `https://token-cdn-domain/${ID2}.json`
-        );
-      });
-    });
+  describe('ERC1155 Behaviors', function () {
+    // describe('1. uri', async function () {
+    //   it('should return uri string with id input substituted', async function () {
+    //     const ID0 = 0;
+    //     const ID1 = 1;
+    //     const ID2 = 1234;
+    //     expect(await this.token.uri(BigNumber.from(ID0))).to.equal(
+    //       `https://token-cdn-domain/${ID0}.json`
+    //     );
+    //     expect(await this.token.uri(BigNumber.from(ID1))).to.equal(
+    //       `https://token-cdn-domain/${ID1}.json`
+    //     );
+    //     expect(await this.token.uri(BigNumber.from(ID2))).to.equal(
+    //       `https://token-cdn-domain/${ID2}.json`
+    //     );
+    //   });
+    // });
 
     describe('2. balanceOf', function () {
-      // it('reverts when queried about the zero address', async function () {
-      //   await expectRevert(
-      //     this.token.balanceOf(ZERO_ADDRESS, firstTokenId),
-      //     'ERC1155: address zero is not a valid owner'
-      //   );
-      // });
+      it('reverts when queried about the zero address', async function () {
+        // await expectRevert(
+        //   this.token.balanceOf(ZERO_ADDRESS, firstTokenId),
+        //   'ERC1155: address zero is not a valid owner'
+        // );
+        await expect(this.token.balanceOf(ZERO_ADDRESS, firstTokenId)).to.be
+          .reverted;
+      });
       context("1) when accounts don't own tokens", function () {
         it('should return zero before mint', async function () {
           expect(
             await this.token.balanceOf(
-              this.firstTokenHolder.getAddress(),
+              this.firstTokenHolder.address,
               firstTokenId
             )
           ).to.deep.equal(zeroAmount);
           expect(
             await this.token.balanceOf(
-              this.secondTokenHolder.getAddress(),
+              this.secondTokenHolder.address,
               secondTokenId
             )
           ).to.deep.equal(zeroAmount);
           expect(
             await this.token.balanceOf(
-              this.firstTokenHolder.getAddress(),
+              this.firstTokenHolder.address,
               unknownTokenId
             )
           ).to.deep.equal(zeroAmount);
@@ -83,7 +85,7 @@ function shouldBehaveLikeERC1155() {
           await this.token
             .connect(this.minter)
             .mint(
-              this.firstTokenHolder.getAddress(),
+              this.firstTokenHolder.address,
               firstTokenId,
               firstAmount,
               '0x'
@@ -91,7 +93,7 @@ function shouldBehaveLikeERC1155() {
           await this.token
             .connect(this.minter)
             .mint(
-              this.secondTokenHolder.getAddress(),
+              this.secondTokenHolder.address,
               secondTokenId,
               secondAmount,
               '0x'
@@ -101,21 +103,21 @@ function shouldBehaveLikeERC1155() {
         it('should return the amount of tokens owned by the given addresses', async function () {
           expect(
             await this.token.balanceOf(
-              this.firstTokenHolder.getAddress(),
+              this.firstTokenHolder.address,
               firstTokenId
             )
           ).to.deep.equal(firstAmount);
 
           expect(
             await this.token.balanceOf(
-              this.secondTokenHolder.getAddress(),
+              this.secondTokenHolder.address,
               secondTokenId
             )
           ).to.deep.equal(secondAmount);
 
           expect(
             await this.token.balanceOf(
-              this.firstTokenHolder.getAddress(),
+              this.firstTokenHolder.address,
               unknownTokenId
             )
           ).to.deep.equal(zeroAmount);
@@ -128,10 +130,10 @@ function shouldBehaveLikeERC1155() {
       //   await expectRevert(
       //     this.token.balanceOfBatch(
       //       [
-      //         this.firstTokenHolder.getAddress(),
-      //         this.secondTokenHolder.getAddress(),
-      //         this.firstTokenHolder.getAddress(),
-      //         this.secondTokenHolder.getAddress(),
+      //         this.firstTokenHolder.address,
+      //         this.secondTokenHolder.address,
+      //         this.firstTokenHolder.address,
+      //         this.secondTokenHolder.address,
       //       ],
       //       [firstTokenId, secondTokenId, unknownTokenId]
       //     ),
@@ -140,8 +142,8 @@ function shouldBehaveLikeERC1155() {
       //   await expectRevert(
       //     this.token.balanceOfBatch(
       //       [
-      //         this.firstTokenHolder.getAddress(),
-      //         this.secondTokenHolder.getAddress(),
+      //         this.firstTokenHolder.address,
+      //         this.secondTokenHolder.address,
       //       ],
       //       [firstTokenId, secondTokenId, unknownTokenId]
       //     ),
@@ -152,8 +154,8 @@ function shouldBehaveLikeERC1155() {
       //   await expectRevert(
       //     this.token.balanceOfBatch(
       //       [
-      //         this.firstTokenHolder.getAddress(),
-      //         this.secondTokenHolder.getAddress(),
+      //         this.firstTokenHolder.address,
+      //         this.secondTokenHolder.address,
       //         ZERO_ADDRESS,
       //       ],
       //       [firstTokenId, secondTokenId, unknownTokenId]
@@ -165,9 +167,9 @@ function shouldBehaveLikeERC1155() {
         it('should return zeros for each account', async function () {
           const result = await this.token.balanceOfBatch(
             [
-              this.firstTokenHolder.getAddress(),
-              this.secondTokenHolder.getAddress(),
-              this.firstTokenHolder.getAddress(),
+              this.firstTokenHolder.address,
+              this.secondTokenHolder.address,
+              this.firstTokenHolder.address,
             ],
             [firstTokenId, secondTokenId, unknownTokenId]
           );
@@ -182,7 +184,7 @@ function shouldBehaveLikeERC1155() {
           await this.token
             .connect(this.minter)
             .mint(
-              this.firstTokenHolder.getAddress(),
+              this.firstTokenHolder.address,
               firstTokenId,
               firstAmount,
               '0x'
@@ -190,7 +192,7 @@ function shouldBehaveLikeERC1155() {
           await this.token
             .connect(this.minter)
             .mint(
-              this.secondTokenHolder.getAddress(),
+              this.secondTokenHolder.address,
               secondTokenId,
               secondAmount,
               '0x'
@@ -199,9 +201,9 @@ function shouldBehaveLikeERC1155() {
         it('should return amounts owned by each account in order passed', async function () {
           const result = await this.token.balanceOfBatch(
             [
-              this.secondTokenHolder.getAddress(),
-              this.firstTokenHolder.getAddress(),
-              this.firstTokenHolder.getAddress(),
+              this.secondTokenHolder.address,
+              this.firstTokenHolder.address,
+              this.firstTokenHolder.address,
             ],
             [secondTokenId, firstTokenId, unknownTokenId]
           );
@@ -213,9 +215,9 @@ function shouldBehaveLikeERC1155() {
         it('should return multiple times the balance of the same address when asked', async function () {
           const result = await this.token.balanceOfBatch(
             [
-              this.firstTokenHolder.getAddress(),
-              this.secondTokenHolder.getAddress(),
-              this.firstTokenHolder.getAddress(),
+              this.firstTokenHolder.address,
+              this.secondTokenHolder.address,
+              this.firstTokenHolder.address,
             ],
             [firstTokenId, secondTokenId, firstTokenId]
           );
@@ -227,42 +229,57 @@ function shouldBehaveLikeERC1155() {
         });
       });
     });
-    // describe('setApprovalForAll', function () {
-    //   let receipt;
-    //   beforeEach(async function () {
-    //     receipt = await this.token.setApprovalForAll(proxy, true, {
-    //       from: multiTokenHolder,
-    //     });
-    //   });
-    //   it('sets approval status which can be queried via isApprovedForAll', async function () {
-    //     expect(
-    //       await this.token.isApprovedForAll(multiTokenHolder, proxy)
-    //     ).to.be.equal(true);
-    //   });
-    //   it('emits an ApprovalForAll log', function () {
-    //     expectEvent(receipt, 'ApprovalForAll', {
-    //       account: multiTokenHolder,
-    //       operator: proxy,
-    //       approved: true,
-    //     });
-    //   });
-    //   it('can unset approval for an operator', async function () {
-    //     await this.token.setApprovalForAll(proxy, false, {
-    //       from: multiTokenHolder,
-    //     });
-    //     expect(
-    //       await this.token.isApprovedForAll(multiTokenHolder, proxy)
-    //     ).to.be.equal(false);
-    //   });
-    //   it('reverts if attempting to approve self as an operator', async function () {
-    //     await expectRevert(
-    //       this.token.setApprovalForAll(multiTokenHolder, true, {
-    //         from: multiTokenHolder,
-    //       }),
-    //       'ERC1155: setting approval status for self'
-    //     );
-    //   });
-    // });
+    describe('setApprovalForAll', function () {
+      let tx;
+      let receipt;
+      beforeEach(async function () {
+        tx = await this.token
+          .connect(this.multiTokenHolder)
+          .setApprovalForAll(this.proxy.address, true);
+      });
+
+      it('sets approval status should be able to be queried via isApprovedForAll', async function () {
+        await tx.wait();
+        expect(
+          await this.token.isApprovedForAll(
+            this.multiTokenHolder.address,
+            this.proxy.address
+          )
+        ).to.be.equal(true);
+      });
+
+      it('should emit an ApprovalForAll log', async function () {
+        await expect(tx)
+          .to.emit(this.token, 'ApprovalForAll')
+          .withArgs(this.multiTokenHolder.address, this.proxy.address, true);
+      });
+
+      it('should be able to unset approval for an operator', async function () {
+        await this.token
+          .connect(this.multiTokenHolder)
+          .setApprovalForAll(this.proxy.address, false);
+        expect(
+          await this.token.isApprovedForAll(
+            this.multiTokenHolder.address,
+            this.proxy.address
+          )
+        ).to.be.equal(false);
+      });
+
+      it('reverts if attempting to approve self as an operator', async function () {
+        // await expectRevert(
+        //   this.token.setApprovalForAll(multiTokenHolder, true, {
+        //     from: multiTokenHolder,
+        //   }),
+        //   'ERC1155: setting approval status for self'
+        // );
+        await expect(
+          this.token
+            .connect(this.multiTokenHolder)
+            .setApprovalForAll(this.multiTokenHolder.address, true)
+        ).to.be.reverted;
+      });
+    });
     // describe('safeTransferFrom', function () {
     //   beforeEach(async function () {
     //     await this.token.mint(
@@ -571,15 +588,9 @@ function shouldBehaveLikeERC1155() {
     // });
     // describe('safeBatchTransferFrom', function () {
     //   beforeEach(async function () {
-    //     await this.token.mint(
-    //       multiTokenHolder,
-    //       firstTokenId,
-    //       firstAmount,
-    //       '0x',
-    //       {
-    //         from: minter,
-    //       }
-    //     );
+    //     await this.token.mint(multiTokenHolder, firstTokenId, firstAmount, '0x', {
+    //       from: minter,
+    //     });
     //     await this.token.mint(
     //       multiTokenHolder,
     //       secondTokenId,
@@ -730,7 +741,7 @@ function shouldBehaveLikeERC1155() {
     //           );
     //         });
     //         batchTransferWasSuccessful.call(this, {
-    //           operator: proxy,
+    //           operator: this.proxy,
     //           from: multiTokenHolder,
     //           ids: [firstTokenId, secondTokenId],
     //           values: [firstAmount, secondAmount],
@@ -930,10 +941,10 @@ function shouldBehaveLikeERC1155() {
     //       });
     //     }
     //   );
-  });
+    // });
 
-  // shouldSupportInterfaces(['ERC165', 'ERC1155']);
-  // });
+    // shouldSupportInterfaces(['ERC165', 'ERC1155']);
+  });
 }
 
 module.exports = {
