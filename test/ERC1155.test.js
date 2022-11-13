@@ -226,7 +226,7 @@ contract('ERC115', function (accounts) {
             ],
             [firstTokenId, secondTokenId, unknownTokenId]
           )
-        ).to.be.reverted;
+        ).to.be.revertedWith('ERC1155: accounts and ids length mismatch');
 
         // await expectRevert(
         //   this.token.balanceOfBatch(
@@ -243,7 +243,7 @@ contract('ERC115', function (accounts) {
             [this.firstTokenHolder.address, this.secondTokenHolder.address],
             [firstTokenId, secondTokenId, unknownTokenId]
           )
-        ).to.be.reverted;
+        ).to.be.revertedWith('ERC1155: accounts and ids length mismatch');
       });
 
       it('should when one of the addresses is the zero address', async function () {
@@ -267,7 +267,7 @@ contract('ERC115', function (accounts) {
             ],
             [firstTokenId, secondTokenId, unknownTokenId]
           )
-        ).to.be.reverted;
+        ).to.be.revertedWith('ERC1155: address zero is not a valid owner');
       });
       context("1) when accounts don't own tokens", function () {
         it('should return zeros for each account', async function () {
@@ -387,7 +387,7 @@ contract('ERC115', function (accounts) {
           this.token
             .connect(this.multiTokenHolder)
             .setApprovalForAll(this.multiTokenHolder.address, true)
-        ).to.be.reverted;
+        ).to.be.revertedWith('ERC1155: setting approval status for self');
       });
     });
 
@@ -430,7 +430,7 @@ contract('ERC115', function (accounts) {
               firstAmount.add('1'),
               '0x'
             )
-        ).to.be.reverted;
+        ).to.be.revertedWith('ERC1155: insufficient balance for transfer');
       });
 
       it('should revert when transferring to zero address', async function () {
@@ -456,7 +456,7 @@ contract('ERC115', function (accounts) {
               firstAmount,
               '0x'
             )
-        ).to.be.reverted;
+        ).to.be.revertedWith('ERC1155: transfer to the zero address');
       });
 
       function transferWasSuccessful({ operator, from, id, value }) {
@@ -591,7 +591,9 @@ contract('ERC115', function (accounts) {
                       firstAmount,
                       '0x'
                     )
-                ).to.be.reverted;
+                ).to.be.revertedWith(
+                  'ERC1155: caller is not token owner or approved'
+                );
               });
             }
           );
@@ -785,7 +787,7 @@ contract('ERC115', function (accounts) {
                   firstAmount,
                   '0x'
                 )
-            ).to.be.reverted;
+            ).to.be.revertedWith('ERC1155: ERC1155Receiver rejected tokens');
           });
         }
       );
@@ -831,7 +833,7 @@ contract('ERC115', function (accounts) {
                 firstAmount,
                 '0x'
               )
-          ).to.be.reverted;
+          ).to.be.revertedWith('ERC1155ReceiverMock: reverting on receive');
         });
       });
 

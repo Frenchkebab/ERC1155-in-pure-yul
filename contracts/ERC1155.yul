@@ -168,14 +168,9 @@ object "ERC1155Yul" {
                 let accountsLen := decodeAsArrayLen(accountsPos)
                 let idLen := decodeAsArrayLen(idsPos)
 
-                if iszero(eq(accountsLen, idLen))
+                if require(eq(accountsLen, idLen))
                 {   
-                    mstore(0x00, 0x20)
-                    mstore(0x20, 41)
-                    // "ERC1155: accounts and ids length mismatch"
-                    mstore(0x40, 0x455243313135353a206163636f756e747320616e6420696473206c656e677468)
-                    mstore(0x60, 0x206d69736d617463680000000000000000000000000000000000000000000000)
-                    revert(0x00, 0x80)
+                    accountsAndIdsLengthMismatch()
                 }
 
                 // return array
@@ -216,7 +211,7 @@ object "ERC1155Yul" {
 
             function safeTransferFrom(from, to, id, amount, dataOffset) {
                 if require(or(eq(from, caller()), isApprovedForAll(from, caller()))) {
-                    revert(0, 0)
+                    callerIsNotTokenOwnerOrApproved()
                 }
                 _safeTransferFrom(from, to, id, amount, dataOffset)
             }
@@ -257,7 +252,7 @@ object "ERC1155Yul" {
 
             function _setApprovalForall(owner, operator, approved) {
                 if require(iszero(eq(owner, operator))) {
-                    revert(0, 0)
+                    settingApprovalStatusForSelf()
                 }
                 let offset := operatorApprovalStorageOffset(owner, operator)
                 sstore(offset, approved)
@@ -266,7 +261,7 @@ object "ERC1155Yul" {
 
             function _safeTransferFrom(from, to, id, amount, dataOffset) {
                 if require(to) {
-                    revert(0, 0)
+                    transferToTheZeroAddress()
                 }
 
                 let operator := caller()
@@ -278,7 +273,7 @@ object "ERC1155Yul" {
                 
                 // checks if 'from' account balance is greater than 'amount' to transfer
                 if require(iszero(lt(fromBalance, amount))) {
-                    revert(0, 0)
+                    insufficientBalanceForTransfer()
                 }
 
                 // update balance
@@ -320,12 +315,16 @@ object "ERC1155Yul" {
                     // reverts if call fails
                     mstore(0x00, 0) // clear memory
                     if require(call(gas(), to, 0, 0x80, totalLen, 0x00, 0x04)) {
-                        revert(0, 0)
+                        if gt(returndatasize(), 0x04) {
+                            returndatacopy(0x00, 0, returndatasize())
+                            revert(0x00, returndatasize())
+                        }
+                        transferToNonERC1155ReceiverImplementer()
                     }
                     
                     // reverts if it does not return proper selector (0xf23a6e61)
                     if require(eq(onERC1155ReceivedSelector, mload(0))) {
-                        revert(0, 0)
+                            erc1155ReceiverRejectedTokens()
                     }
                 }
             }
@@ -495,12 +494,88 @@ object "ERC1155Yul" {
                 let mptr := 0x80
                 mstore(mptr, 0x8c379a000000000000000000000000000000000000000000000000000000000)
                 mstore(add(mptr, 0x04), 0x20)
-                mstore(add(mptr, 0x24), 0x2a)
+                mstore(add(mptr, 0x24), 42)
                 mstore(add(mptr, 0x44), 0x455243313135353a2061646472657373207a65726f206973206e6f7420612076)
                 mstore(add(mptr, 0x64), 0x616c6964206f776e657200000000000000000000000000000000000000000000)
                 revert(mptr, 0x84)
             }
 
+            function accountsAndIdsLengthMismatch() {
+                /* 'ERC1155: accounts and ids length mismatch' */
+                let mptr := 0x80
+                mstore(mptr, 0x8c379a000000000000000000000000000000000000000000000000000000000)
+                mstore(add(mptr, 0x04), 0x20)
+                mstore(add(mptr, 0x24), 41)
+                mstore(add(mptr, 0x44), 0x455243313135353a206163636f756e747320616e6420696473206c656e677468)
+                mstore(add(mptr, 0x64), 0x206d69736d617463680000000000000000000000000000000000000000000000)
+                revert(mptr, 0x84)
+            }
+
+            function settingApprovalStatusForSelf() {
+                /* 'ERC1155: setting approval status for self' */
+                let mptr := 0x80
+                mstore(mptr, 0x8c379a000000000000000000000000000000000000000000000000000000000)
+                mstore(add(mptr, 0x04), 0x20)
+                mstore(add(mptr, 0x24), 41)
+                mstore(add(mptr, 0x44), 0x455243313135353a2073657474696e6720617070726f76616c20737461747573)
+                mstore(add(mptr, 0x64), 0x20666f722073656c660000000000000000000000000000000000000000000000)
+                revert(mptr, 0x84)
+            }
+
+            function insufficientBalanceForTransfer() {
+                /* 'ERC1155: insufficient balance for transfer' */
+                let mptr := 0x80
+                mstore(mptr, 0x8c379a000000000000000000000000000000000000000000000000000000000)
+                mstore(add(mptr, 0x04), 0x20)
+                mstore(add(mptr, 0x24), 42)
+                mstore(add(mptr, 0x44), 0x455243313135353a20696e73756666696369656e742062616c616e636520666f)
+                mstore(add(mptr, 0x64), 0x72207472616e7366657200000000000000000000000000000000000000000000)
+                revert(mptr, 0x84)
+            }
+
+            function transferToTheZeroAddress() {
+                /* 'ERC1155: transfer to the zero address' */
+                let mptr := 0x80
+                mstore(mptr, 0x8c379a000000000000000000000000000000000000000000000000000000000)
+                mstore(add(mptr, 0x04), 0x20)
+                mstore(add(mptr, 0x24), 37)
+                mstore(add(mptr, 0x44), 0x455243313135353a207472616e7366657220746f20746865207a65726f206164)
+                mstore(add(mptr, 0x64), 0x6472657373000000000000000000000000000000000000000000000000000000)
+                revert(mptr, 0x84)
+            }
+
+            function callerIsNotTokenOwnerOrApproved() {
+                /* 'ERC1155: caller is not token owner or approved' */
+                let mptr := 0x80
+                mstore(mptr, 0x8c379a000000000000000000000000000000000000000000000000000000000)
+                mstore(add(mptr, 0x04), 0x20)
+                mstore(add(mptr, 0x24), 46)
+                mstore(add(mptr, 0x44), 0x455243313135353a2063616c6c6572206973206e6f7420746f6b656e206f776e)
+                mstore(add(mptr, 0x64), 0x6572206f7220617070726f766564000000000000000000000000000000000000)
+                revert(mptr, 0x84)
+            }
+
+            function erc1155ReceiverRejectedTokens() {
+                /* 'ERC1155: ERC1155Receiver rejected tokens' */
+                let mptr := 0x80
+                mstore(mptr, 0x8c379a000000000000000000000000000000000000000000000000000000000)
+                mstore(add(mptr, 0x04), 0x20)
+                mstore(add(mptr, 0x24), 40)
+                mstore(add(mptr, 0x44), 0x455243313135353a204552433131353552656365697665722072656a65637465)
+                mstore(add(mptr, 0x64), 0x6420746f6b656e73000000000000000000000000000000000000000000000000)
+                revert(mptr, 0x84)
+            }
+
+            function transferToNonERC1155ReceiverImplementer() {
+                /* 'ERC1155: transfer to non-ERC1155Receiver implementer' */
+                let mptr := 0x80
+                mstore(mptr, 0x8c379a000000000000000000000000000000000000000000000000000000000)
+                mstore(add(mptr, 0x04), 0x20)
+                mstore(add(mptr, 0x24), 52)
+                mstore(add(mptr, 0x44), 0x455243313135353a207472616e7366657220746f206e6f6e2d45524331313535)
+                mstore(add(mptr, 0x64), 0x526563656976657220696d706c656d656e746572000000000000000000000000)
+                revert(mptr, 0x84)
+            }
         }
     }
 }
