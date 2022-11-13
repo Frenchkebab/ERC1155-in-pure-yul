@@ -28,7 +28,9 @@ object "ERC1155Yul" {
             mstore(0x40, 0x80)
 
             // Protection against sending Ether
-            require(iszero(callvalue()))
+            if require(iszero(callvalue())) {
+                revert(0, 0)
+            }
 
             function uriPos() -> pos {
                 pos := 0x20
@@ -152,7 +154,9 @@ object "ERC1155Yul" {
             }
 
             function balanceOf(account, id) -> bal {
-                revertZeroAddressOwner(account)
+                if require(account) {
+                    zeroAddressOwner()
+                }
                 bal := sload(balanceStorageOffset(id, account))
             }
 
@@ -211,7 +215,9 @@ object "ERC1155Yul" {
             }
 
             function safeTransferFrom(from, to, id, amount, dataOffset) {
-                require(or(eq(from, caller()), isApprovedForAll(from, caller())))
+                if require(or(eq(from, caller()), isApprovedForAll(from, caller()))) {
+                    revert(0, 0)
+                }
                 _safeTransferFrom(from, to, id, amount, dataOffset)
             }
 
@@ -250,14 +256,18 @@ object "ERC1155Yul" {
             }
 
             function _setApprovalForall(owner, operator, approved) {
-                require(iszero(eq(owner, operator)))
+                if require(iszero(eq(owner, operator))) {
+                    revert(0, 0)
+                }
                 let offset := operatorApprovalStorageOffset(owner, operator)
                 sstore(offset, approved)
                 emitApprovalForAll(owner, operator, approved)
             }
 
             function _safeTransferFrom(from, to, id, amount, dataOffset) {
-                require(to)
+                if require(to) {
+                    revert(0, 0)
+                }
 
                 let operator := caller()
                 let fromOffset := balanceStorageOffset(id, from)
@@ -267,7 +277,9 @@ object "ERC1155Yul" {
                 let toBalance := sload(toOffset)
                 
                 // checks if 'from' account balance is greater than 'amount' to transfer
-                require(iszero(lt(fromBalance, amount)))
+                if require(iszero(lt(fromBalance, amount))) {
+                    revert(0, 0)
+                }
 
                 // update balance
                 sstore(fromOffset, sub(fromBalance, amount))
@@ -307,10 +319,14 @@ object "ERC1155Yul" {
 
                     // reverts if call fails
                     mstore(0x00, 0) // clear memory
-                    require(call(gas(), to, 0, 0x80, totalLen, 0x00, 0x04))
+                    if require(call(gas(), to, 0, 0x80, totalLen, 0x00, 0x04)) {
+                        revert(0, 0)
+                    }
                     
                     // reverts if it does not return proper selector (0xf23a6e61)
-                    require(eq(onERC1155ReceivedSelector, mload(0)))
+                    if require(eq(onERC1155ReceivedSelector, mload(0))) {
+                        revert(0, 0)
+                    }
                 }
             }
 
@@ -416,11 +432,13 @@ object "ERC1155Yul" {
             // }
 
             function revertIfZeroAddress(addr) {
-                require(addr)
+                if require(addr) {
+                    revert(0, 0)
+                }
             }
 
-            function require(condition) {
-                if iszero(condition) { revert(0, 0) }
+            function require(condition) -> res {
+                res := iszero(condition)
             }
 
             /*
@@ -456,22 +474,33 @@ object "ERC1155Yul" {
                 el := mload(add(add(ptr, 0x20), mul(i, 0x20)))
             }
 
-            function revertZeroAddressOwner(account) {
-                if iszero(account) {
-                    mstore(0x00, 0x08c379a00000000000000000000000000000000000000000000000000000000)
-                    mstore(0x04, 0x20)
-                    mstore(0x24, 41)
-                    mstore(0x44, 0x455243313135353a2061646472657373207a65726f206973206e6f7420612076)
-                    mstore(0x64, 0x616c6964206f776e657200000000000000000000000000000000000000000000)
-                    revert(0x00, 0x84)
-                }
-            }
+            // function revertZeroAddressOwner(account) {
+            //     mstore(0x00, 0x08c379a00000000000000000000000000000000000000000000000000000000)
+            //     mstore(0x04, 0x20)
+            //     mstore(0x24, 41)
+            //     mstore(0x44, 0x455243313135353a2061646472657373207a65726f206973206e6f7420612076)
+            //     mstore(0x64, 0x616c6964206f776e657200000000000000000000000000000000000000000000)
+            //     revert(0x00, 0x84)
+            // }
 
             function revertInValidAddress(addr) {
                 if iszero(iszero(and(addr, not(0xffffffffffffffffffffffffffffffffffffffff)))) {
                     revert(0, 0)
                 }
             }
+
+            /* ----------  Revert string functions ---------- */
+            function zeroAddressOwner() {
+                /* ERC1155: address zero is not a valid owner */
+                let mptr := 0x80
+                mstore(mptr, 0x8c379a000000000000000000000000000000000000000000000000000000000)
+                mstore(add(mptr, 0x04), 0x20)
+                mstore(add(mptr, 0x24), 0x2a)
+                mstore(add(mptr, 0x44), 0x455243313135353a2061646472657373207a65726f206973206e6f7420612076)
+                mstore(add(mptr, 0x64), 0x616c6964206f776e657200000000000000000000000000000000000000000000)
+                revert(mptr, 0x84)
+            }
+
         }
     }
 }

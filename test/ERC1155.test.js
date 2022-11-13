@@ -132,7 +132,7 @@ contract('ERC115', function (accounts) {
         // );
         await expect(
           this.token.balanceOf(ZERO_ADDRESS, firstTokenId)
-        ).to.be.reverted;
+        ).to.be.revertedWith('ERC1155: address zero is not a valid owner');
       });
       context("1) when accounts don't own tokens", function () {
         it('should return zero before mint', async function () {
