@@ -74,17 +74,6 @@ object "ERC1155Yul" {
                 setURI(decodeAsUint(0))
             }
 
-            case 0xe51c223d  {
-                _doSafeBatchTransferAcceptanceCheck(
-                    decodeAsAddress(0),
-                    decodeAsAddress(1),
-                    decodeAsAddress(2),
-                    decodeAsUint(3),
-                    decodeAsUint(4),
-                    decodeAsUint(5)
-                )
-            }
-
             default {
                 revert(0, 0)
             }
