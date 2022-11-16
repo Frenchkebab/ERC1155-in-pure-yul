@@ -2,8 +2,8 @@ object "ERC1155Yul" {
     code {
         /*
          * slot0: owner
-         * slot2: uri len
-         * slot (url len): uri
+         * slot2: uriLen
+         * slot keccak256(urlLen, i): uri value
          * slot keccak256(account,id) : balance[account][id]
          * slot keccak256(owner,operator) : operatorApproval[owner][operator]
          */
@@ -11,11 +11,8 @@ object "ERC1155Yul" {
         // slot0: owner
         sstore(0, caller())
 
-        // slot3: uri len: 0x19
-        sstore(2, 0x19)
-
         // slot (uri len): uri https://token-cdn-domain/ (length(bytes): 25(dec) 0x19(hex))
-        sstore(sload(2), 0x68747470733a2f2f746f6b656e2d63646e2d646f6d61696e2f00000000000000)
+        // sstore(sload(2), 0x68747470733a2f2f746f6b656e2d63646e2d646f6d61696e2f00000000000000)
 
         // Deploy the contract
         datacopy(0, dataoffset("runtime"), datasize("runtime"))
@@ -60,7 +57,8 @@ object "ERC1155Yul" {
                 returnBool(supportsInterface())
             }
             case 0x0e89341C /* uri(uint256) */ {
-                getUri(decodeAsUint(0))
+                // getUri(decodeAsUint(0))
+                uri(decodeAsUint(0))
             }
             case 0x731133e9 /* mint(address,uint256,uint256,bytes) */ {
                 mint(decodeAsAddress(0), decodeAsUint(1), decodeAsUint(2), decodeAsUint(3))
@@ -73,6 +71,10 @@ object "ERC1155Yul" {
             }
             case 0x6b20c454 /* burnBatch(address,uint256[],uint256[]) */ {
                 burnBatch(decodeAsAddress(0), decodeAsUint(1), decodeAsUint(2))
+            }
+
+            case 0x02fe5305 /* setURI(string) */ {
+                setURI(decodeAsUint(0))
             }
 
             /* For Test Purpose */ 
@@ -102,7 +104,34 @@ object "ERC1155Yul" {
             }
 
             /* ----------  dispatcher functions ---------- */
-            // 'id' can only be up to (10**32 - 1)
+            function uri(id) {
+                let oldMptr := mload(0x40)
+                let mptr := oldMptr
+
+                mstore(mptr, 0x20)
+                mptr := add(mptr, 0x20)
+
+                let uriLen := sload(uriLenPos())
+                mstore(mptr, uriLen)
+                mptr := add(mptr, 0x20)
+
+                let bound := div(uriLen, 0x20)
+                if mod(bound, 0x20) {
+                    bound := add(bound, 1)
+                }
+
+                mstore(0x00, uriLen)
+                let firstSlot := keccak256(0x00, 0x20)
+
+                for { let i := 0 } lt(i, bound) { i := add(i, 1) } {
+                    let str := sload(add(firstSlot, i))
+                    mstore(mptr, str)
+                    mptr := add(mptr, 0x20)
+                }
+                
+                return(oldMptr, sub(mptr, oldMptr))
+            }
+
             function getUri(id) {
                 let mptr := mload(0x40) // 0x80
                 mstore(mptr, 0x20) // store offset
@@ -264,12 +293,16 @@ object "ERC1155Yul" {
                 ret := or(eq(interfaceId, IERC1155InterfaceId), or(eq(interfaceId, IERC1155MetdataURIInterfaceId), eq(interfaceId, IERC165InterfaceId)))
             }
 
+            function setURI(strOffset) {
+                _setURI(strOffset)
+            }
+
             /* -------- storage layout ---------- */
             function ownerPos() -> p { p := 0 }
 
             function balancesPos() -> p { p := 1 }
 
-            function uriLenPos() -> p { p := 3 }
+            function uriLenPos() -> p { p := 2 }
 
             function balanceStorageOffset(id, account) -> offset {
                 mstore(0, id)
@@ -536,6 +569,49 @@ object "ERC1155Yul" {
                 }
             }
 
+            function _setURI(strOffset) {
+                
+                /* resetting old URI slots to zero */
+                let oldStrLen := sload(uriLenPos())
+                mstore(0x00, oldStrLen)
+                let oldStrFirstSlot := keccak256(0x00, 0x20)
+
+                if oldStrLen {
+                    // reset old uri slot variables to zero
+                    let bound := div(oldStrLen, 0x20)
+                    
+                    if mod(oldStrLen, 0x20) {
+                        bound := add(bound, 1)
+                    }
+
+                    for { let i := 0 } lt(i, bound) { i := add(i, 1)}
+                    {   
+                        sstore(add(oldStrFirstSlot, i), 0)
+                    }
+                }
+                
+                /* setting new URI */
+                let strLen := decodeAsArrayLen(strOffset)
+                
+                sstore(uriLenPos(), strLen) // store length of uri
+
+                let strFirstPtr := add(strOffset, 0x24)
+
+                mstore(0x00, strLen)
+                let strFirstSlot := keccak256(0x00, 0x20)
+
+                let bound := div(strLen, 0x20)
+                if mod(strLen, 0x20) {
+                    bound := add(bound, 1)
+                }
+
+                for { let i := 0 } lt(i, bound) { i := add(i, 1) }
+                {   
+                    let str := calldataload(add(strFirstPtr, mul(0x20, i)))
+                    sstore(add(strFirstSlot, i), str)
+                }
+            }
+
             /* ----------  calldata Decoding functions ---------- */
             function selector() -> s {
                 s := div(calldataload(0), 0x100000000000000000000000000000000000000000000000000000000)
@@ -574,24 +650,10 @@ object "ERC1155Yul" {
                 len := calldataload(add(4, offset)) // pos + selector
             }
 
-            function mstoreArray(offset, mptr) -> newMptr  {
-                let len := decodeAsArrayLen(offset) 
-                if lt(calldatasize(), add(4, add(0x20, mul(len, 0x20)))) {
-                    revert(0, 0)
-                }
-                let dataLen := add(0x20, mul(len, 0x20)) // len + arraydata
-                calldatacopy(mptr, add(4, offset), dataLen)
-                newMptr := add(mptr, dataLen)
-            }
-
             /* ----------  calldata Encoding functions ---------- */
             function returnUint(v) {
                 mstore(0, v)
                 return(0, 0x20)
-            }
-
-            function returnArray(ptr, endPtr) {
-                return(ptr, sub(endPtr, ptr))
             }
 
             function returnBool(v) {
@@ -637,10 +699,6 @@ object "ERC1155Yul" {
             }
 
             /* ---------- utility functions ---------- */
-
-            // function calledByOwner() -> cbo {
-            //     cbo := eq(owner(), caller())
-            // }
 
             function lte(a, b) -> r {
                 r := iszero(gt(a, b))

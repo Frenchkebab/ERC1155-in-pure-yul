@@ -10,9 +10,7 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const { BigNumber, utils } = ethers;
 
-const {
-  shouldSupportInterfaces,
-} = require('./utils/introspection/SupportsInterface.behavior');
+const { shouldSupportInterfaces } = require('./SupportsInterface.behavior');
 
 const ERC1155ReceiverMock = artifacts.require('ERC1155ReceiverMock');
 
@@ -31,22 +29,22 @@ function shouldBehaveLikeERC1155() {
   const RECEIVER_BATCH_MAGIC_VALUE = '0xbc197c81';
 
   describe('[1] ERC1155 Behaviors', function () {
-    describe('uri', async function () {
-      it('should return uri string with id input substituted', async function () {
-        const ID0 = 0;
-        const ID1 = 1;
-        const ID2 = 1234;
-        expect(await this.token.uri(BigNumber.from(ID0))).to.equal(
-          `https://token-cdn-domain/${ID0}.json`
-        );
-        expect(await this.token.uri(BigNumber.from(ID1))).to.equal(
-          `https://token-cdn-domain/${ID1}.json`
-        );
-        expect(await this.token.uri(BigNumber.from(ID2))).to.equal(
-          `https://token-cdn-domain/${ID2}.json`
-        );
-      });
-    });
+    // describe('uri', async function () {
+    //   it('should return uri string with id input substituted', async function () {
+    //     const ID0 = 0;
+    //     const ID1 = 1;
+    //     const ID2 = 1234;
+    //     expect(await this.token.uri(BigNumber.from(ID0))).to.equal(
+    //       `https://token-cdn-domain/${ID0}.json`
+    //     );
+    //     expect(await this.token.uri(BigNumber.from(ID1))).to.equal(
+    //       `https://token-cdn-domain/${ID1}.json`
+    //     );
+    //     expect(await this.token.uri(BigNumber.from(ID2))).to.equal(
+    //       `https://token-cdn-domain/${ID2}.json`
+    //     );
+    //   });
+    // });
 
     describe('1. balanceOf', function () {
       it('reverts when queried about the zero address', async function () {

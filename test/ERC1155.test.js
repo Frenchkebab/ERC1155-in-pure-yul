@@ -15,9 +15,7 @@ const fs = require('fs');
 const path = require('path');
 const { BigNumber, utils } = ethers;
 
-const {
-  shouldSupportInterfaces,
-} = require('./utils/introspection/SupportsInterface.behavior');
+const { shouldSupportInterfaces } = require('./SupportsInterface.behavior');
 
 const ERC1155ReceiverMock = artifacts.require('ERC1155ReceiverMock');
 
@@ -52,10 +50,6 @@ const getBytecode = () => {
 };
 
 contract('ERC115', function (accounts) {
-  // const [operator, tokenHolder, tokenBatchHolder, ...otherAccounts] = accounts;
-
-  // const initialURI = 'https://token-cdn-domain/{id}.json';
-
   beforeEach(async function () {
     // deploy ERC155Yul Contract
     const ERC1155Yul = await ethers.getContractFactory(
@@ -77,7 +71,6 @@ contract('ERC115', function (accounts) {
     );
     await setContract.wait();
 
-    // this.token = await erc1155YulCaller;
     this.token = erc1155Yul;
 
     [
@@ -134,13 +127,6 @@ contract('ERC115', function (accounts) {
         });
 
         it('should emit a TransferSingle event', async function () {
-          // expectEvent(this.receipt, 'TransferSingle', {
-          //   operator,
-          //   from: ZERO_ADDRESS,
-          //   to: this.tokenHolder.address,
-          //   id: tokenId,
-          //   value: mintAmount,
-          // });
           await expect(this.receipt)
             .to.emit(this.token, 'TransferSingle')
             .withArgs(
@@ -162,26 +148,12 @@ contract('ERC115', function (accounts) {
 
     describe('2. _mintBatch', function () {
       it('should revert with a zero destination address', async function () {
-        // await expectRevert(
-        //   this.token.mintBatch(ZERO_ADDRESS, tokenBatchIds, mintAmounts, data),
-        //   'ERC1155: mint to the zero address'
-        // );
         await expect(
           this.token.mintBatch(ZERO_ADDRESS, tokenBatchIds, mintAmounts, data)
         ).to.be.revertedWith('ERC1155: mint to the zero address');
       });
 
       it('reverts if length of inputs do not match', async function () {
-        // await expectRevert(
-        //   this.token.mintBatch(
-        //     tokenBatchHolder,
-        //     tokenBatchIds,
-        //     mintAmounts.slice(1),
-        //     data
-        //   ),
-        //   'ERC1155: ids and amounts length mismatch'
-        // );
-
         await expect(
           this.token.mintBatch(
             this.tokenBatchHolder.address,
@@ -190,17 +162,6 @@ contract('ERC115', function (accounts) {
             data
           )
         ).to.be.revertedWith('ERC1155: ids and amounts length mismatch');
-
-        // await expectRevert(
-        //   this.token.mintBatch(
-        //     tokenBatchHolder,
-        //     tokenBatchIds.slice(1),
-        //     mintAmounts,
-        //     data
-        //   ),
-        //   'ERC1155: ids and amounts length mismatch'
-        // );
-
         await expect(
           this.token.mintBatch(
             this.tokenBatchHolder.address,
@@ -224,11 +185,6 @@ contract('ERC115', function (accounts) {
         });
 
         it('should emit a TransferBatch event', async function () {
-          // expectEvent(this.receipt, 'TransferBatch', {
-          //   operator,
-          //   from: ZERO_ADDRESS,
-          //   to: tokenBatchHolder,
-          // });
           await expect(this.receipt)
             .to.emit(this.token, 'TransferBatch')
             .withArgs(
@@ -255,22 +211,12 @@ contract('ERC115', function (accounts) {
 
     describe('3. _burn', function () {
       it("should revert when burning the zero account's tokens", async function () {
-        // await expectRevert(
-        //   this.token.burn(ZERO_ADDRESS, tokenId, mintAmount),
-        //   'ERC1155: burn from the zero address'
-        // );
-
         await expect(
           this.token.burn(ZERO_ADDRESS, tokenId, mintAmount)
         ).to.be.revertedWith('ERC1155: burn from the zero address');
       });
 
       it('should revert when burning a non-existent token id', async function () {
-        // await expectRevert(
-        //   this.token.burn(tokenHolder, tokenId, mintAmount),
-        //   'ERC1155: burn amount exceeds balance'
-        // );
-
         await expect(
           this.token.burn(this.tokenHolder.address, tokenId, mintAmount)
         ).to.be.revertedWith('ERC1155: burn amount exceeds balance');
@@ -280,11 +226,6 @@ contract('ERC115', function (accounts) {
         await this.token
           .connect(this.operator)
           .mint(this.tokenHolder.address, tokenId, mintAmount, data);
-
-        // await expectRevert(
-        //   this.token.burn(tokenHolder, tokenId, mintAmount.addn(1)),
-        //   'ERC1155: burn amount exceeds balance'
-        // );
 
         await expect(
           this.token.burn(
@@ -309,14 +250,6 @@ contract('ERC115', function (accounts) {
         });
 
         it('emits a TransferSingle event', function () {
-          // expectEvent(this.receipt, 'TransferSingle', {
-          //   operator,
-          //   from: tokenHolder,
-          //   to: ZERO_ADDRESS,
-          //   id: tokenId,
-          //   value: burnAmount,
-          // });
-
           expect(this.receipt)
             .to.emit(this.token, 'TransferSingle')
             .withArgs(
@@ -338,26 +271,12 @@ contract('ERC115', function (accounts) {
 
     describe('4. _burnBatch', function () {
       it("should revert when burning the zero account's tokens", async function () {
-        // await expectRevert(
-        //   this.token.burnBatch(ZERO_ADDRESS, tokenBatchIds, burnAmounts),
-        //   'ERC1155: burn from the zero address'
-        // );
-
         await expect(
           this.token.burnBatch(ZERO_ADDRESS, tokenBatchIds, burnAmounts)
         ).to.be.revertedWith('ERC1155: burn from the zero address');
       });
 
       it('should revert if length of inputs do not match', async function () {
-        // await expectRevert(
-        //   this.token.burnBatch(
-        //     tokenBatchHolder,
-        //     tokenBatchIds,
-        //     burnAmounts.slice(1)
-        //   ),
-        //   'ERC1155: ids and amounts length mismatch'
-        // );
-
         await expect(
           this.token.burnBatch(
             this.tokenBatchHolder.address,
@@ -365,15 +284,6 @@ contract('ERC115', function (accounts) {
             burnAmounts.slice(1)
           )
         ).to.be.revertedWith('ERC1155: ids and amounts length mismatch');
-
-        // await expectRevert(
-        //   this.token.burnBatch(
-        //     tokenBatchHolder,
-        //     tokenBatchIds.slice(1),
-        //     burnAmounts
-        //   ),
-        //   'ERC1155: ids and amounts length mismatch'
-        // );
 
         await expect(
           this.token.burnBatch(
@@ -385,11 +295,6 @@ contract('ERC115', function (accounts) {
       });
 
       it('should revert when burning a non-existent token id', async function () {
-        // await expectRevert(
-        //   this.token.burnBatch(tokenBatchHolder, tokenBatchIds, burnAmounts),
-        //   'ERC1155: burn amount exceeds balance'
-        // );
-
         await expect(
           this.token.burnBatch(
             this.tokenBatchHolder.address,
@@ -417,13 +322,6 @@ contract('ERC115', function (accounts) {
         });
 
         it('emits a TransferBatch event', function () {
-          // expectEvent(this.receipt, 'TransferBatch', {
-          //   operator,
-          //   from: tokenBatchHolder,
-          //   to: ZERO_ADDRESS,
-          //   ids: tokenBatchIds,
-          //   values: burnAmounts,
-          // });
           expect(this.receipt)
             .to.emit(this.token, 'TransferBatch')
             .withArgs(
@@ -447,6 +345,22 @@ contract('ERC115', function (accounts) {
             );
           }
         });
+      });
+    });
+  });
+
+  describe('[3] ERC1155MetadataURI', function () {
+    const firstTokenID = BigNumber.from('42');
+    const secondTokenID = BigNumber.from('1337');
+
+    describe('_setURI', function () {
+      const uri = 'https://token-cdn-domain/{id}.json';
+
+      it.only('sets URI for all token types', async function () {
+        await this.token.setURI(uri);
+
+        expect(await this.token.uri(firstTokenID)).to.equal(newURI);
+        expect(await this.token.uri(secondTokenID)).to.equal(newURI);
       });
     });
   });

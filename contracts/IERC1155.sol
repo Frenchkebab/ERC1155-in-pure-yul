@@ -126,4 +126,6 @@ interface IERC1155 is IERC165 {
     function burn(address from, uint256 id, uint256 amount) external;
 
     function burnBatch(address from, uint256[] calldata ids, uint256[] calldata amounts) external;
+
+    function setURI(string calldata uri) external;
 }
