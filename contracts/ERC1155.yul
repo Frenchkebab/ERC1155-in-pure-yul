@@ -69,11 +69,9 @@ object "ERC1155Yul" {
             case 0x6b20c454 /* burnBatch(address,uint256[],uint256[]) */ {
                 burnBatch(decodeAsAddress(0), decodeAsUint(1), decodeAsUint(2))
             }
-
             case 0x02fe5305 /* setURI(string) */ {
                 setURI(decodeAsUint(0))
             }
-
             default {
                 revert(0, 0)
             }
@@ -103,7 +101,7 @@ object "ERC1155Yul" {
                     mstore(mptr, str)
                     mptr := add(mptr, 0x20)
                 }
-                
+
                 return(oldMptr, sub(mptr, oldMptr))
             }
 
@@ -260,7 +258,7 @@ object "ERC1155Yul" {
 
             function supportsInterface() -> ret {
                 let interfaceId := calldataload(0x04)
-                
+
                 let IERC1155InterfaceId := 0xd9b67a2600000000000000000000000000000000000000000000000000000000
                 let IERC1155MetdataURIInterfaceId := 0xd9b67a2600000000000000000000000000000000000000000000000000000000
                 let IERC165InterfaceId := 0x01ffc9a700000000000000000000000000000000000000000000000000000000
@@ -319,7 +317,7 @@ object "ERC1155Yul" {
                 let amountsStartPtr := add(amountsOffset, 0x24)
 
                 for { let i := 0 } lt(i, idsLen) { i := add(i, 1)}
-                {   
+                {
                     let id := calldataload(add(idsStartPtr, mul(0x20, i)))
                     let amount := calldataload(add(amountsStartPtr, mul(0x20, i)))
                     _addBalance(to, id, amount)
@@ -414,7 +412,7 @@ object "ERC1155Yul" {
                 if require(gte(fromBalance, amount)) {
                     revertInsufficientBalanceForTransfer()
                 }
-    
+
                 // update balance
                 _subBalance(from, id, amount)
                 _addBalance(to, id, amount)
@@ -427,7 +425,7 @@ object "ERC1155Yul" {
             function _safeBatchTransferFrom(from, to, idsOffset, amountsOffset, dataOffset) {
                 let idsLen := decodeAsArrayLen(idsOffset)
                 let amountsLen := decodeAsArrayLen(amountsOffset)
-                
+
                 if require(eq(idsLen, amountsLen)) {
                     revertIdsAndAmountsLengthMismatch()
                 }
@@ -452,7 +450,7 @@ object "ERC1155Yul" {
 
                     _subBalance(from, id, amount)
                     _addBalance(to, id, amount)
-                    
+
                 }
                 let operator := caller()
 
@@ -466,16 +464,16 @@ object "ERC1155Yul" {
                     /* "onERC1155Received(address,address,uint256,uint256,bytes)" */
                     let onERC1155ReceivedSelector := 0xf23a6e6100000000000000000000000000000000000000000000000000000000
 
-                    
+
                     /* call onERC1155Received(operator, from, id, amount, data) */
                     let oldMptr := mload(0x40)
                     let mptr := oldMptr
-                    mstore(mptr, onERC1155ReceivedSelector) 
-                    mstore(add(mptr, 0x04), operator)       
-                    mstore(add(mptr, 0x24), from)           
-                    mstore(add(mptr, 0x44), id)             
-                    mstore(add(mptr, 0x64), amount)         
-                    mstore(add(mptr, 0x84), 0xa0)           
+                    mstore(mptr, onERC1155ReceivedSelector)
+                    mstore(add(mptr, 0x04), operator)
+                    mstore(add(mptr, 0x24), from)
+                    mstore(add(mptr, 0x44), id)
+                    mstore(add(mptr, 0x64), amount)
+                    mstore(add(mptr, 0x84), 0xa0)
 
                     let endPtr := copyBytesToMemory(add(mptr, 0xa4), dataOffset) // Copies 'data' to memory
                     mstore(0x40, endPtr)
@@ -489,7 +487,7 @@ object "ERC1155Yul" {
                         }
                         revertTransferToNonERC1155ReceiverImplementer()
                     }
-                    
+
                     // reverts if it does not return proper selector (0xf23a6e61)
                     if require(eq(onERC1155ReceivedSelector, mload(0))) {
                             revertERC1155ReceiverRejectedTokens()
@@ -506,9 +504,9 @@ object "ERC1155Yul" {
                     let oldMptr := mload(0x40)
                     let mptr := oldMptr
 
-                    mstore(mptr, onERC1155BatchReceivedSelector)   
-                    mstore(add(mptr, 0x04), operator)              
-                    mstore(add(mptr, 0x24), from)                  
+                    mstore(mptr, onERC1155BatchReceivedSelector)
+                    mstore(add(mptr, 0x04), operator)
+                    mstore(add(mptr, 0x24), from)
                     mstore(add(mptr, 0x44), 0xa0)   // ids offset
 
                     // mptr+0x44: idsOffset
@@ -520,7 +518,7 @@ object "ERC1155Yul" {
 
                     mstore(add(mptr, 0x64), sub(sub(amountsPtr, oldMptr), 4)) // amountsOffset
                     let dataPtr := copyArrayToMemory(amountsPtr, amountsOffset) // copy amounts to memory
-                    
+
                     mstore(add(mptr, 0x84), sub(sub(dataPtr, oldMptr), 4))       // dataOffset
                     let endPtr := copyBytesToMemory(dataPtr, dataOffset)  // copy data to memory
                     mstore(0x40, endPtr)
@@ -534,7 +532,7 @@ object "ERC1155Yul" {
                         }
                         revertTransferToNonERC1155ReceiverImplementer()
                     }
-                    
+
                     // reverts if it does not return proper selector (0xf23a6e61)
                     if require(eq(onERC1155BatchReceivedSelector, mload(0))) {
                             revertERC1155ReceiverRejectedTokens()
@@ -543,7 +541,6 @@ object "ERC1155Yul" {
             }
 
             function _setURI(strOffset) {
-                
                 /* resetting old URI slots to zero */
                 let oldStrLen := sload(uriLenPos())
                 mstore(0x00, oldStrLen)
@@ -552,20 +549,20 @@ object "ERC1155Yul" {
                 if oldStrLen {
                     // reset old uri slot variables to zero
                     let bound := div(oldStrLen, 0x20)
-                    
+
                     if mod(oldStrLen, 0x20) {
                         bound := add(bound, 1)
                     }
 
                     for { let i := 0 } lt(i, bound) { i := add(i, 1)}
-                    {   
+                    {
                         sstore(add(oldStrFirstSlot, i), 0)
                     }
                 }
-                
+
                 /* setting new URI */
                 let strLen := decodeAsArrayLen(strOffset)
-                
+
                 sstore(uriLenPos(), strLen) // store length of uri
 
                 let strFirstPtr := add(strOffset, 0x24)
@@ -579,7 +576,7 @@ object "ERC1155Yul" {
                 }
 
                 for { let i := 0 } lt(i, bound) { i := add(i, 1) }
-                {   
+                {
                     let str := calldataload(add(strFirstPtr, mul(0x20, i)))
                     sstore(add(strFirstSlot, i), str)
                 }
@@ -645,7 +642,7 @@ object "ERC1155Yul" {
             function emitTransferBatch(operator, from, to, idsOffset, valuesOffset) {
                 /* TransferBatch(address,address,address,uint256[],uint256[]) */
                 let signatureHash := 0x4a39dc06d4c0dbc64b70af90fd698a233a518aa5d07e595d983b8c0526c8f7fb
-                
+
                 let oldMptr := mload(0x40)
                 let mptr := oldMptr
 
@@ -653,14 +650,14 @@ object "ERC1155Yul" {
                 let valuesOffsetPtr := add(mptr, 0x20)
 
                 mstore(idsOffsetPtr, 0x40) // ids offset
-                
+
                 let valuesPtr := copyArrayToMemory(add(mptr, 0x40), idsOffset) // copy ids arary to memory
-                
+
                 mstore(valuesOffsetPtr, sub(valuesPtr, oldMptr)) // store values Offset
                 let endPtr := copyArrayToMemory(valuesPtr, valuesOffset) // copy values array to memory
 
                 log4(oldMptr, sub(endPtr, oldMptr), signatureHash, operator, from, to)
-                
+
                 mstore(0x40, endPtr) // update Free Memory Pointer
             }
 
@@ -752,7 +749,7 @@ object "ERC1155Yul" {
                 mstore(add(mptr, 0x64), 0x206d69736d617463680000000000000000000000000000000000000000000000)
                 revert(mptr, 0x84)
             }
-            
+
             function revertIdsAndAmountsLengthMismatch() {
                 /* "ERC1155: ids and amounts length mismatch" */
                 let mptr := 0x80
