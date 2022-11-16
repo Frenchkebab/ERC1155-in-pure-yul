@@ -129,18 +129,6 @@ function shouldSupportInterfaces(interfaces = []) {
         ).to.equal(true);
       }
     });
-
-    // it('all interface functions are in ABI', async function () {
-    //   for (const k of interfaces) {
-    //     for (const fnName of INTERFACES[k]) {
-    //       const fnSig = FN_SIGNATURES[fnName];
-    //       expect(
-    //         this.contractUnderTest.abi.filter((fn) => fn.signature === fnSig)
-    //           .length
-    //       ).to.equal(1);
-    //     }
-    //   }
-    // });
   });
 }
 

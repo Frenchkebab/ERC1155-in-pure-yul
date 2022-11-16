@@ -10,7 +10,6 @@ const { ethers } = require('hardhat');
 const { expect } = require('chai');
 
 const { shouldBehaveLikeERC1155 } = require('./ERC1155.behavior');
-const ERC1155YulCaller = artifacts.require('ERC1155YulCaller');
 const fs = require('fs');
 const path = require('path');
 const { BigNumber, utils } = ethers;
@@ -58,18 +57,6 @@ contract('ERC115', function (accounts) {
     );
     erc1155Yul = await ERC1155Yul.deploy();
     await erc1155Yul.deployed();
-
-    // deploy ERC1155Yul Caller contract
-    const ERC1155YulCaller = await ethers.getContractFactory(
-      'ERC1155YulCaller'
-    );
-    const erc1155YulCaller = await ERC1155YulCaller.deploy();
-    await erc1155YulCaller.deployed();
-
-    const setContract = await erc1155YulCaller.setContractAddr(
-      erc1155Yul.address
-    );
-    await setContract.wait();
 
     this.token = erc1155Yul;
 
@@ -356,11 +343,11 @@ contract('ERC115', function (accounts) {
     describe('_setURI', function () {
       const uri = 'https://token-cdn-domain/{id}.json';
 
-      it.only('sets URI for all token types', async function () {
+      it('sets URI for all token types', async function () {
         await this.token.setURI(uri);
 
-        expect(await this.token.uri(firstTokenID)).to.equal(newURI);
-        expect(await this.token.uri(secondTokenID)).to.equal(newURI);
+        expect(await this.token.uri(firstTokenID)).to.equal(uri);
+        expect(await this.token.uri(secondTokenID)).to.equal(uri);
       });
     });
   });

@@ -2,7 +2,7 @@ object "ERC1155Yul" {
     code {
         /*
          * slot0: owner
-         * slot2: uriLen
+         * slot1: uriLen
          * slot keccak256(urlLen, i): uri value
          * slot keccak256(account,id) : balance[account][id]
          * slot keccak256(owner,operator) : operatorApproval[owner][operator]
@@ -10,9 +10,6 @@ object "ERC1155Yul" {
 
         // slot0: owner
         sstore(0, caller())
-
-        // slot (uri len): uri https://token-cdn-domain/ (length(bytes): 25(dec) 0x19(hex))
-        // sstore(sload(2), 0x68747470733a2f2f746f6b656e2d63646e2d646f6d61696e2f00000000000000)
 
         // Deploy the contract
         datacopy(0, dataoffset("runtime"), datasize("runtime"))
@@ -139,7 +136,7 @@ object "ERC1155Yul" {
                 
                 let strLen := 0
 
-                let uriLen := sload(2)
+                let uriLen := sload(uriLenPos())
                 strLen := add(strLen, uriLen)
 
                 let uriVal := sload(uriLen)
@@ -300,9 +297,7 @@ object "ERC1155Yul" {
             /* -------- storage layout ---------- */
             function ownerPos() -> p { p := 0 }
 
-            function balancesPos() -> p { p := 1 }
-
-            function uriLenPos() -> p { p := 2 }
+            function uriLenPos() -> p { p := 1 }
 
             function balanceStorageOffset(id, account) -> offset {
                 mstore(0, id)
@@ -365,7 +360,7 @@ object "ERC1155Yul" {
                 let operator := caller()
 
                 let fromBalance := sload(balanceStorageOffset(id, from))
-                if require(iszero(lt(fromBalance, amount))) {
+                if require(gte(fromBalance, amount)) {
                     revertBurnAmountExceedsBalance()
                 }
                 _subBalance(from, id, amount)
@@ -397,7 +392,7 @@ object "ERC1155Yul" {
 
                     let fromBalance := sload(balanceStorageOffset(id, from))
 
-                    if require(iszero(lt(fromBalance, amount))) {
+                    if require(gte(fromBalance, amount)) {
                         revertBurnAmountExceedsBalance()
                     }
                     _subBalance(from, id, amount)
@@ -438,7 +433,7 @@ object "ERC1155Yul" {
                 let fromBalance := sload(balanceStorageOffset(id, from))
 
                 // checks if 'from' account balance is greater than 'amount' to transfer
-                if require(iszero(lt(fromBalance, amount))) {
+                if require(gte(fromBalance, amount)) {
                     revertInsufficientBalanceForTransfer()
                 }
     
@@ -473,7 +468,7 @@ object "ERC1155Yul" {
 
                     let fromBalance := sload(balanceStorageOffset(id, from))
 
-                    if require(iszero(lt(fromBalance, amount))) {
+                    if require(gte(fromBalance, amount)) {
                         revertInsufficientBalanceForTransfer()
                     }
 
@@ -738,39 +733,6 @@ object "ERC1155Yul" {
 
             function require(condition) -> res {
                 res := iszero(condition)
-            }
-
-            /*
-             * Converts hex number to decimal string bytes
-             * ex: (dec) 1234 -> 0x313233340000....000
-             */
-            function hexToDecString(num) -> str {
-
-                let mptr := 0x1f
-                let len := 0 // bytes length of dec string
-                for { } num { num := div(num, 0x0a) }
-                {
-                    // 0x30: dec 0, 0x31: dec 1, ... , 0x39: dec 9
-                    mstore8(mptr, add(0x30, mod(num, 0x0a)))
-                    mptr := sub(mptr, 8)
-                    len := add(len, 0x01)
-                }
-                str := mload(add(mptr, 8))
-            }
-
-            // returns number of digits in num
-            function getNumDigits(num) -> digits {
-                digits := 0
-                for { } num { }
-                {
-                    num := mul(num, 0x10)
-                    digits := add(digits, 1)
-                }
-            }
-
-            // fetches arr[i]
-            function getArrElement(ptr, i) -> el {
-                el := mload(add(add(ptr, 0x20), mul(i, 0x20)))
             }
 
             function revertInValidAddress(addr) {
