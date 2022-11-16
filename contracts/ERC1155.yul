@@ -74,17 +74,6 @@ object "ERC1155Yul" {
                 setURI(decodeAsUint(0))
             }
 
-            /* For Test Purpose */ 
-
-            /*  _doSafeBatchTransferAcceptanceCheck(
-                    address operator,
-                    address from,
-                    address to,
-                    uint256[] memory ids,
-                    uint256[] memory amounts,
-                    bytes memory data
-                ) external */
-
             case 0xe51c223d  {
                 _doSafeBatchTransferAcceptanceCheck(
                     decodeAsAddress(0),
