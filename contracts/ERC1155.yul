@@ -3,8 +3,8 @@ object "ERC1155Yul" {
         /*
          * slot0: owner
          * slot1: uriLen
-         * slot keccak256(urlLen, i): uri value
-         * slot keccak256(account,id) : balance[account][id]
+         * slot (keccak256(urlLen) + i): uri value
+         * slot keccak256(id,account) : balances[id][account]
          * slot keccak256(owner,operator) : operatorApproval[owner][operator]
          */
 
