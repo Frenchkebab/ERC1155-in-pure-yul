@@ -66,13 +66,13 @@ object "ERC1155Yul" {
                 mint(decodeAsAddress(0), decodeAsUint(1), decodeAsUint(2), decodeAsUint(3))
             }
             case 0x1f7fDffa /* mintBatch(address,uint256[],uint256[],bytes) */{
-
+                mintBatch(decodeAsAddress(0), decodeAsUint(1), decodeAsUint(2), decodeAsUint(3))
             }
             case 0xf5298aca /* burn(address,uint256,uint256) */ {
-
+                burn(decodeAsAddress(0), decodeAsUint(1), decodeAsUint(2))
             }
             case 0x6b20c454 /* burnBatch(address,uint256[],uint256[]) */ {
-
+                burnBatch(decodeAsAddress(0), decodeAsUint(1), decodeAsUint(2))
             }
 
             /* For Test Purpose */ 
@@ -219,6 +219,18 @@ object "ERC1155Yul" {
                 _mint(to, id, amount, dataOffset)
             }
 
+            function mintBatch(to, idsOffset, amountsOffset, dataOffset) {
+                _mintBatch(to, idsOffset, amountsOffset, dataOffset)
+            }
+
+            function burn(from, id, amount) {
+                _burn(from, id, amount)
+            }
+
+            function burnBatch(from, idsOffset, amountsOffset) {
+                _burnBatch(from, idsOffset, amountsOffset)
+            }
+
             function setApprovalForAll(operator, id) {
                 _setApprovalForall(caller(), operator, id)
             }
@@ -281,6 +293,84 @@ object "ERC1155Yul" {
                 let operator := caller()
                 emitTransferSingle(operator, 0, to, id, amount)
                 _doSafeTransferAcceptanceCheck(operator, 0x0, to, id, amount, dataOffset)
+            }
+
+            function _mintBatch(to, idsOffset, amountsOffset, dataOffset) {
+                if require(to) {
+                    revertMintToTheZeroAddress()
+                }
+
+                let idsLen := decodeAsArrayLen(idsOffset)
+                let amountsLen := decodeAsArrayLen(amountsOffset)
+
+                if require(eq(idsLen, amountsLen)) {
+                    revertIdsAndAmountsLengthMismatch()
+                }
+
+                let operator := caller()
+
+                let idsStartPtr := add(idsOffset, 0x24)
+                let amountsStartPtr := add(amountsOffset, 0x24)
+
+                for { let i := 0 } lt(i, idsLen) { i := add(i, 1)}
+                {   
+                    let id := calldataload(add(idsStartPtr, mul(0x20, i)))
+                    let amount := calldataload(add(amountsStartPtr, mul(0x20, i)))
+                    _addBalance(to, id, amount)
+                }
+
+                emitTransferBatch(operator, 0, to, idsOffset, amountsOffset)
+
+                _doSafeBatchTransferAcceptanceCheck(operator, 0, to, idsOffset, amountsOffset, dataOffset)
+            }
+
+            function _burn(from, id, amount) {
+                if require(from) {
+                    revertBurnFromTheZeroAddrss()
+                }
+
+                let operator := caller()
+
+                let fromBalance := sload(balanceStorageOffset(id, from))
+                if require(iszero(lt(fromBalance, amount))) {
+                    revertBurnAmountExceedsBalance()
+                }
+                _subBalance(from, id, amount)
+
+                emitTransferSingle(operator, from, 0, id, amount)
+            }
+
+            function _burnBatch(from, idsOffset, amountsOffset) {
+                if require(from) {
+                    revertBurnFromTheZeroAddrss()
+                }
+
+                let idsLen := decodeAsArrayLen(idsOffset)
+                let amountsLen := decodeAsArrayLen(amountsOffset)
+
+                if require(eq(idsLen, amountsLen)) {
+                    revertIdsAndAmountsLengthMismatch()
+                }
+
+                let operator := caller()
+
+                let idsStartPtr := add(idsOffset, 0x24)
+                let amountsStartPtr := add(amountsOffset, 0x24)
+
+                for { let i:= 0 } lt(i, idsLen) { i := add(i, 1)}
+                {
+                    let id := calldataload(add(idsStartPtr, mul(0x20, i)))
+                    let amount := calldataload(add(amountsStartPtr, mul(0x20, i)))
+
+                    let fromBalance := sload(balanceStorageOffset(id, from))
+
+                    if require(iszero(lt(fromBalance, amount))) {
+                        revertBurnAmountExceedsBalance()
+                    }
+                    _subBalance(from, id, amount)
+                }
+
+                emitTransferBatch(operator, from, 0, idsOffset, amountsOffset)
             }
 
             function _addBalance(to, id, amount) {
@@ -739,6 +829,28 @@ object "ERC1155Yul" {
                 mstore(add(mptr, 0x24), 52)
                 mstore(add(mptr, 0x44), 0x455243313135353a207472616e7366657220746f206e6f6e2d45524331313535)
                 mstore(add(mptr, 0x64), 0x526563656976657220696d706c656d656e746572000000000000000000000000)
+                revert(mptr, 0x84)
+            }
+
+            function revertBurnFromTheZeroAddrss() {
+                /* "ERC1155: burn from the zero address" */
+                let mptr := 0x00
+                mstore(mptr, 0x8c379a000000000000000000000000000000000000000000000000000000000)
+                mstore(add(mptr, 0x04), 0x20)
+                mstore(add(mptr, 0x24), 35)
+                mstore(add(mptr, 0x44), 0x455243313135353a206275726e2066726f6d20746865207a65726f2061646472)
+                mstore(add(mptr, 0x64), 0x6573730000000000000000000000000000000000000000000000000000000000)
+                revert(mptr, 0x84)
+            }
+
+            function revertBurnAmountExceedsBalance() {
+                /* "ERC1155: burn amount exceeds balance" */
+                let mptr := 0x00
+                mstore(mptr, 0x8c379a000000000000000000000000000000000000000000000000000000000)
+                mstore(add(mptr, 0x04), 0x20)
+                mstore(add(mptr, 0x24), 36)
+                mstore(add(mptr, 0x44), 0x455243313135353a206275726e20616d6f756e7420657863656564732062616c)
+                mstore(add(mptr, 0x64), 0x616e636500000000000000000000000000000000000000000000000000000000)
                 revert(mptr, 0x84)
             }
         }
