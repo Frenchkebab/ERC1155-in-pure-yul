@@ -57,7 +57,7 @@ object "ERC1155Yul" {
                 setApprovalForAll(decodeAsAddress(0), decodeAsBool(1))
             }
             case 0x01ffc9a7 /* "supportsInterface(bytes4)" */ {
-
+                returnBool(supportsInterface())
             }
             case 0x0e89341C /* uri(uint256) */ {
                 getUri(decodeAsUint(0))
@@ -240,6 +240,16 @@ object "ERC1155Yul" {
                     revertCallerIsNotTokenOwnerOrApproved()
                 }
                 _safeBatchTransferFrom(from, to, idsOffset, amountsOffset, dataOffset)
+            }
+
+            function supportsInterface() -> ret {
+                let interfaceId := calldataload(0x04)
+                
+                let IERC1155InterfaceId := 0xd9b67a2600000000000000000000000000000000000000000000000000000000
+                let IERC1155MetdataURIInterfaceId := 0xd9b67a2600000000000000000000000000000000000000000000000000000000
+                let IERC165InterfaceId := 0x01ffc9a700000000000000000000000000000000000000000000000000000000
+
+                ret := or(eq(interfaceId, IERC1155InterfaceId), or(eq(interfaceId, IERC1155MetdataURIInterfaceId), eq(interfaceId, IERC165InterfaceId)))
             }
 
             /* -------- storage layout ---------- */
@@ -494,12 +504,8 @@ object "ERC1155Yul" {
                 return(ptr, sub(endPtr, ptr))
             }
 
-            function returnTrue() {
-                returnUint(1)
-            }
-            
-            function returnFalse() {
-                returnUint(0)
+            function returnBool(v) {
+                returnUint(v)
             }
 
             /* ----------  events ---------- */
