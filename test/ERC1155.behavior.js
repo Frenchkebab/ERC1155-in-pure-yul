@@ -45,7 +45,7 @@ function shouldBehaveLikeERC1155() {
         ).to.be.revertedWith('ERC1155: address zero is not a valid owner');
       });
       context("1) when accounts don't own tokens", function () {
-        it('should return zero before mint', async function () {
+        it('returns zero before mint', async function () {
           expect(
             await this.token.balanceOf(
               this.firstTokenHolder.address,
@@ -87,7 +87,7 @@ function shouldBehaveLikeERC1155() {
             );
         });
 
-        it('should return the amount of tokens owned by the given addresses', async function () {
+        it('returns the amount of tokens owned by the given addresses', async function () {
           expect(
             await this.token.balanceOf(
               this.firstTokenHolder.address,
@@ -113,7 +113,7 @@ function shouldBehaveLikeERC1155() {
     });
 
     describe('2. balanceOfBatch', function () {
-      it("should revert when input arrays don't match up", async function () {
+      it("reverts when input arrays don't match up", async function () {
         await expect(
           this.token.balanceOfBatch(
             [
@@ -134,7 +134,7 @@ function shouldBehaveLikeERC1155() {
         ).to.be.revertedWith('ERC1155: accounts and ids length mismatch');
       });
 
-      it('should when one of the addresses is the zero address', async function () {
+      it('reverts when one of the addresses is the zero address', async function () {
         await expect(
           this.token.balanceOfBatch(
             [
@@ -148,7 +148,7 @@ function shouldBehaveLikeERC1155() {
       });
 
       context("1) when accounts don't own tokens", function () {
-        it('should return zeros for each account', async function () {
+        it('returns zeros for each account', async function () {
           const result = await this.token.balanceOfBatch(
             [
               this.firstTokenHolder.address,
@@ -184,7 +184,7 @@ function shouldBehaveLikeERC1155() {
             );
         });
 
-        it('should return amounts owned by each account in order passed', async function () {
+        it('returns amounts owned by each account in order passed', async function () {
           const result = await this.token.balanceOfBatch(
             [
               this.secondTokenHolder.address,
@@ -199,7 +199,7 @@ function shouldBehaveLikeERC1155() {
           expect(result[2]).to.deep.equal(zeroAmount);
         });
 
-        it('should return multiple times the balance of the same address when asked', async function () {
+        it('returns multiple times the balance of the same address when asked', async function () {
           const result = await this.token.balanceOfBatch(
             [
               this.firstTokenHolder.address,
@@ -226,7 +226,7 @@ function shouldBehaveLikeERC1155() {
           .setApprovalForAll(this.proxy.address, true);
       });
 
-      it('approval status should be able to be queried via isApprovedForAll', async function () {
+      it('sets approval status which can be queried via isApprovedForAll', async function () {
         await tx.wait();
         expect(
           await this.token.isApprovedForAll(
@@ -236,13 +236,13 @@ function shouldBehaveLikeERC1155() {
         ).to.be.equal(true);
       });
 
-      it('should emit an ApprovalForAll log', async function () {
+      it('emits an ApprovalForAll log', async function () {
         await expect(tx)
           .to.emit(this.token, 'ApprovalForAll')
           .withArgs(this.multiTokenHolder.address, this.proxy.address, true);
       });
 
-      it('should be able to unset approval for an operator', async function () {
+      it('can unset approval for an operator', async function () {
         await this.token
           .connect(this.multiTokenHolder)
           .setApprovalForAll(this.proxy.address, false);
@@ -254,7 +254,7 @@ function shouldBehaveLikeERC1155() {
         ).to.be.equal(false);
       });
 
-      it('should revert if attempting to approve self as an operator', async function () {
+      it('reverts if attempting to approve self as an operator', async function () {
         await expect(
           this.token
             .connect(this.multiTokenHolder)
@@ -281,7 +281,7 @@ function shouldBehaveLikeERC1155() {
         await tx2.wait();
       });
 
-      it('should revert when transferring more than balance', async function () {
+      it('reverts when transferring more than balance', async function () {
         await expect(
           this.token
             .connect(this.multiTokenHolder)
@@ -295,7 +295,7 @@ function shouldBehaveLikeERC1155() {
         ).to.be.revertedWith('ERC1155: insufficient balance for transfer');
       });
 
-      it('should revert when transferring to zero address', async function () {
+      it('reverts when transferring to zero address', async function () {
         await expect(
           this.token
             .connect(this.multiTokenHolder)
@@ -383,7 +383,7 @@ function shouldBehaveLikeERC1155() {
           value: firstAmount,
         });
 
-        it('should preserve existing balances which are not transferred by multiTokenHolder', async function () {
+        it('preserves existing balances which are not transferred by multiTokenHolder', async function () {
           const balance1 = await this.token.balanceOf(
             this.multiTokenHolder.address,
             secondTokenId
@@ -409,7 +409,7 @@ function shouldBehaveLikeERC1155() {
                   .setApprovalForAll(this.proxy.address, false);
               });
 
-              it('should revert', async function () {
+              it('reverts', async function () {
                 await expect(
                   this.token
                     .connect(this.proxy)
@@ -455,7 +455,7 @@ function shouldBehaveLikeERC1155() {
                 value: firstAmount,
               });
 
-              it("should preserves operator's balances not involved in the transfer", async function () {
+              it("preserves operator's balances not involved in the transfer", async function () {
                 const balance1 = await this.token.balanceOf(
                   this.proxy.address,
                   firstTokenId
@@ -579,7 +579,7 @@ function shouldBehaveLikeERC1155() {
             this.receiver = erc1155ReceiverMock;
           });
 
-          it('should revert', async function () {
+          it('reverts', async function () {
             await expect(
               this.token
                 .connect(this.multiTokenHolder)
@@ -629,7 +629,7 @@ function shouldBehaveLikeERC1155() {
       context(
         '6) to a contract that does not implement the required function',
         function () {
-          it('should revert', async function () {
+          it('reverts', async function () {
             const invalidReceiver = this.token;
             await expect(
               this.token
@@ -663,7 +663,7 @@ function shouldBehaveLikeERC1155() {
           );
       });
 
-      it('should revert when transferring amount more than any of balances', async function () {
+      it('reverts when transferring amount more than any of balances', async function () {
         await expect(
           this.token
             .connect(this.multiTokenHolder)
@@ -813,7 +813,7 @@ function shouldBehaveLikeERC1155() {
                   .setApprovalForAll(this.proxy.address, false);
               });
 
-              it('should revert', async function () {
+              it('reverts', async function () {
                 await expect(
                   this.token
                     .connect(this.proxy)
@@ -979,7 +979,7 @@ function shouldBehaveLikeERC1155() {
             this.receiver = erc1155ReceiverMock;
           });
 
-          it('should revert', async function () {
+          it('reverts', async function () {
             await expect(
               this.token
                 .connect(this.multiTokenHolder)
@@ -1011,7 +1011,7 @@ function shouldBehaveLikeERC1155() {
           this.receiver = erc1155ReceiverMock;
         });
 
-        it('should revert', async function () {
+        it('reverts', async function () {
           await expect(
             this.token
               .connect(this.multiTokenHolder)
@@ -1083,7 +1083,7 @@ function shouldBehaveLikeERC1155() {
       context(
         '7) to a contract that does not implement the required function',
         function () {
-          it('should revert', async function () {
+          it('reverts', async function () {
             const invalidReceiver = this.token;
             await expect(
               this.token
