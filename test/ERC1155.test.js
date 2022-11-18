@@ -1,22 +1,12 @@
-const {
-  BN,
-  constants,
-  expectEvent,
-  expectRevert,
-} = require('@openzeppelin/test-helpers');
-const { ZERO_ADDRESS } = constants;
-
-const { ethers } = require('hardhat');
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
+const { BigNumber, utils } = ethers;
 
 const { shouldBehaveLikeERC1155 } = require('./ERC1155.behavior');
 const fs = require('fs');
 const path = require('path');
-const { BigNumber, utils } = ethers;
 
 const { shouldSupportInterfaces } = require('./SupportsInterface.behavior');
-
-const ERC1155ReceiverMock = artifacts.require('ERC1155ReceiverMock');
 
 const getAbi = () => {
   try {
@@ -48,7 +38,9 @@ const getBytecode = () => {
   }
 };
 
-contract('ERC115', function (accounts) {
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+
+describe('ERC115', function (accounts) {
   beforeEach(async function () {
     // deploy ERC155Yul Contract
     const ERC1155Yul = await ethers.getContractFactory(
@@ -99,11 +91,10 @@ contract('ERC115', function (accounts) {
     const data = '0x12345678';
 
     describe('1. _mint', function () {
-      it('should revert with a zero destination address', async function () {
-        await expectRevert(
-          this.token.mint(ZERO_ADDRESS, tokenId, mintAmount, data),
-          'ERC1155: mint to the zero address'
-        );
+      it('reverts with a zero destination address', async function () {
+        await expect(
+          this.token.mint(ZERO_ADDRESS, tokenId, mintAmount, data)
+        ).to.be.revertedWith('ERC1155: mint to the zero address');
       });
 
       context('with minted tokens', function () {
@@ -113,7 +104,7 @@ contract('ERC115', function (accounts) {
             .mint(this.tokenHolder.address, tokenId, mintAmount, data);
         });
 
-        it('should emit a TransferSingle event', async function () {
+        it('emits a TransferSingle event', async function () {
           await expect(this.receipt)
             .to.emit(this.token, 'TransferSingle')
             .withArgs(
@@ -134,7 +125,7 @@ contract('ERC115', function (accounts) {
     });
 
     describe('2. _mintBatch', function () {
-      it('should revert with a zero destination address', async function () {
+      it('reverts with a zero destination address', async function () {
         await expect(
           this.token.mintBatch(ZERO_ADDRESS, tokenBatchIds, mintAmounts, data)
         ).to.be.revertedWith('ERC1155: mint to the zero address');
@@ -171,7 +162,7 @@ contract('ERC115', function (accounts) {
             );
         });
 
-        it('should emit a TransferBatch event', async function () {
+        it('emits a TransferBatch event', async function () {
           await expect(this.receipt)
             .to.emit(this.token, 'TransferBatch')
             .withArgs(
@@ -183,7 +174,7 @@ contract('ERC115', function (accounts) {
             );
         });
 
-        it('should credit the minted batch of tokens', async function () {
+        it('credits the minted batch of tokens', async function () {
           const holderBatchBalances = await this.token.balanceOfBatch(
             new Array(tokenBatchIds.length).fill(this.tokenBatchHolder.address),
             tokenBatchIds
@@ -197,7 +188,7 @@ contract('ERC115', function (accounts) {
     });
 
     describe('3. _burn', function () {
-      it("should revert when burning the zero account's tokens", async function () {
+      it("reverts when burning the zero account's tokens", async function () {
         await expect(
           this.token.burn(ZERO_ADDRESS, tokenId, mintAmount)
         ).to.be.revertedWith('ERC1155: burn from the zero address');
@@ -257,13 +248,13 @@ contract('ERC115', function (accounts) {
     });
 
     describe('4. _burnBatch', function () {
-      it("should revert when burning the zero account's tokens", async function () {
+      it("reverts when burning the zero account's tokens", async function () {
         await expect(
           this.token.burnBatch(ZERO_ADDRESS, tokenBatchIds, burnAmounts)
         ).to.be.revertedWith('ERC1155: burn from the zero address');
       });
 
-      it('should revert if length of inputs do not match', async function () {
+      it('reverts if length of inputs do not match', async function () {
         await expect(
           this.token.burnBatch(
             this.tokenBatchHolder.address,
@@ -281,7 +272,7 @@ contract('ERC115', function (accounts) {
         ).to.be.revertedWith('ERC1155: ids and amounts length mismatch');
       });
 
-      it('should revert when burning a non-existent token id', async function () {
+      it('reverts when burning a non-existent token id', async function () {
         await expect(
           this.token.burnBatch(
             this.tokenBatchHolder.address,

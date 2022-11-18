@@ -1,18 +1,10 @@
-const {
-  BN,
-  constants,
-  expectEvent,
-  expectRevert,
-} = require('@openzeppelin/test-helpers');
-const { ZERO_ADDRESS } = constants;
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const { BigNumber, utils } = ethers;
 
 const { shouldSupportInterfaces } = require('./SupportsInterface.behavior');
-
-const ERC1155ReceiverMock = artifacts.require('ERC1155ReceiverMock');
 
 function shouldBehaveLikeERC1155() {
   const firstTokenId = BigNumber.from('1');
