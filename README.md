@@ -40,4 +40,4 @@ Tests `mint`, `mintBatch`, `burn`, and `burnBatch`
 
 ### 3. ERC1155MetadataURI
 
-Tests `supportsInterface` function from `IERC1155MetadataURI`
+Tests `setURI` function from `IERC1155MetadataURI`
