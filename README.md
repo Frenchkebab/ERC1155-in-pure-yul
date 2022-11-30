@@ -4,13 +4,13 @@ https://github.com/Frenchkebab/ERC1155-in-pure-yul/blob/main/contracts/ERC1155.y
 
 Implements 100% functionally identical to `ERC165`, `ERC1155`and `ERC1155MetadataURI` specs including **revert message** only except for **constructor** function from `ERC1155`.
 
-## Dependency
+## [0] Dependency
 
 ### @controlcpluscontrolv/hardhat-yul
 
 Automatically compiles `.yul` files.
 
-## Installation
+## [1] Installation
 
 ### install dependencies
 
@@ -20,12 +20,12 @@ Automatically compiles `.yul` files.
 
 `npx hardhat run test/ERC1155.test`
 
-## Test Code
+## [2] Test Script
 
 Code base is from https://github.com/OpenZeppelin/openzeppelin-contracts/tree/master/test/token/ERC1155.
 
 Since original test scripts were using **Truffle Test**,
-test scripts in this repo are partially re-written using **ethers.js** and **chai**.
+test scripts in this repo are re-written using **ethers** and **hardhat**.
 
 Test script (`test/ERC1155.test.js`) consists of **3 parts**.
 
@@ -42,7 +42,7 @@ Tests `mint`, `mintBatch`, `burn`, and `burnBatch`
 
 Tests `setURI` function from `IERC1155MetadataURI`
 
-## Test Result
+## [3] Test Result
 
 ```
   ERC115
