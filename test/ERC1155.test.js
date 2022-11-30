@@ -194,7 +194,7 @@ describe('ERC115', function (accounts) {
         ).to.be.revertedWith('ERC1155: burn from the zero address');
       });
 
-      it('should revert when burning a non-existent token id', async function () {
+      it('reverts when burning a non-existent token id', async function () {
         await expect(
           this.token.burn(this.tokenHolder.address, tokenId, mintAmount)
         ).to.be.revertedWith('ERC1155: burn amount exceeds balance');
