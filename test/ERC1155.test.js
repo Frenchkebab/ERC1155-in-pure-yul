@@ -67,7 +67,7 @@ describe('ERC115', function (accounts) {
 
   shouldBehaveLikeERC1155();
 
-  describe('[2] internal functions', function () {
+  describe('[2] Internal functions', function () {
     const tokenId = BigNumber.from(1990);
     const mintAmount = BigNumber.from(9001);
     const burnAmount = BigNumber.from(3000);
